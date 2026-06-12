@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class OrderService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   // #28 Place Order
   async placeOrder(buyerId: string, dto: CreateOrderDto) {
@@ -85,9 +89,13 @@ export class OrderService {
     if (!order) throw new NotFoundException('Order not found');
     if (order.buyerId !== buyerId) throw new ForbiddenException();
 
-    return this.prisma.order.update({
+    const updated = await this.prisma.order.update({
       where: { id: orderId },
       data: { status: 'DELIVERED' },
     });
+
+    await this.notificationService.notifyDeliveryUpdate(buyerId, orderId, 'DELIVERED');
+
+    return updated;
   }
 }
