@@ -7,6 +7,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  SELLER
+  BUYER
+  ADMIN
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CHAPA
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
 model User {
   id           String   @id @default(uuid())
   firstName    String
@@ -17,22 +43,119 @@ model User {
   role         Role     @default(SELLER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  shop         Shop?
+
+  shop            Shop?
+  ordersAsBuyer   Order[]        @relation("BuyerOrders")
+  reviewsGiven    Review[]       @relation("BuyerReviews")
+  reviewsReceived Review[]       @relation("SellerReviews")
+  deliveries      Delivery[]
+  notifications   Notification[]
 }
 
 model Shop {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   name        String
   description String
   logoUrl     String?
-  sellerId    String   @unique
-  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  sellerId    String    @unique
+  seller      User      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
-enum Role {
-  SELLER
-  BUYER
-  ADMIN
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  products Product[]
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int         @default(0)
+  imageUrl    String?
+  shopId      String
+  shop        Shop        @relation(fields: [shopId], references: [id])
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  reviews     Review[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  buyerId         String
+  buyer           User          @relation("BuyerOrders", fields: [buyerId], references: [id])
+  status          OrderStatus   @default(PENDING)
+  totalAmount     Float
+  deliveryAddress String
+  deliveryFee     Float         @default(0)
+  paymentMethod   PaymentMethod @default(CASH)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  items           OrderItem[]
+  payment         Payment?
+  delivery        Delivery?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Float
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  orderId   String        @unique
+  order     Order         @relation(fields: [orderId], references: [id])
+  amount    Float
+  method    PaymentMethod
+  status    PaymentStatus @default(UNPAID)
+  chapaRef  String?
+  createdAt DateTime      @default(now())
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  buyerId   String
+  buyer     User     @relation("BuyerReviews", fields: [buyerId], references: [id])
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  sellerId  String?
+  seller    User?    @relation("SellerReviews", fields: [sellerId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Delivery {
+  id          String    @id @default(uuid())
+  orderId     String    @unique
+  order       Order     @relation(fields: [orderId], references: [id])
+  runnerId    String?
+  runner      User?     @relation(fields: [runnerId], references: [id])
+  status      String    @default("PENDING")
+  pickedUpAt  DateTime?
+  deliveredAt DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
