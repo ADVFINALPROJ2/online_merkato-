@@ -2,6 +2,7 @@ import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterSellerDto } from './dto/register-seller.dto';
+import { LoginSellerDto } from './dto/login-seller.dto'; // Added this import
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -18,4 +19,15 @@ export class AuthController {
   register(@Body() dto: RegisterSellerDto) {
     return this.authService.register(dto);
   }
-}
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Log in an existing seller' })
+  @ApiBody({ type: LoginSellerDto })
+  @ApiResponse({ status: 200, description: 'Logged in successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
+  login(@Body() dto: LoginSellerDto) {
+    return this.authService.login(dto);
+  }
+} // Final closing bracket for the AuthController class

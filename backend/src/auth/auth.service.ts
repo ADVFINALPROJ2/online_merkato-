@@ -1,3 +1,4 @@
+import { LoginSellerDto } from './dto/login-seller.dto';
 import {
   Injectable,
   ConflictException,
@@ -59,4 +60,43 @@ export class AuthService {
       throw new InternalServerErrorException('Registration failed');
     }
   }
-}
+
+  // Moved completely INSIDE the AuthService class brackets:
+  async login(dto: LoginSellerDto) {
+    // 1. Find the user by email
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    // 2. If user doesn't exist, block them
+    if (!user) {
+      throw new ConflictException('Invalid email or password');
+    }
+
+    // 3. Compare the typed password with the encrypted database password
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if (!isPasswordValid) {
+      throw new ConflictException('Invalid email or password');
+    }
+
+    // 4. Generate a secure signature token
+    const token = this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    // 5. Return success
+    return {
+      message: 'Logged in successfully',
+      accessToken: token,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+      },
+    };
+  }
+} // This is the final closing bracket for the class
