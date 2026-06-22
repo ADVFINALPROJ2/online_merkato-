@@ -1,11 +1,13 @@
 import {
   Injectable,
   ConflictException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateShopDto } from './dto/create-shop.dto';
 import { UpdateShopDto } from './dto/update-shop.dto';
 import { ShopLocationDto } from './dto/shop-location.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ShopService {
@@ -49,7 +51,7 @@ export class ShopService {
   }
 
   async findBySellerId(sellerId: string) {
-    return this.prisma.shop.findUnique({
+    const shop = await this.prisma.shop.findUnique({
       where: { sellerId },
       include: {
         seller: {
@@ -63,10 +65,14 @@ export class ShopService {
         location: true,
       },
     });
+    if (!shop) {
+      throw new NotFoundException('Shop not found');
+    }
+    return shop;
   }
 
   async findByPublicId(shopId: string) {
-    return this.prisma.shop.findUnique({
+    const shop = await this.prisma.shop.findUnique({
       where: { id: shopId },
       include: {
         seller: {
@@ -80,43 +86,40 @@ export class ShopService {
         location: true,
       },
     });
+    if (!shop) {
+      throw new NotFoundException('Shop not found');
+    }
+    return shop;
   }
 
   async update(dto: UpdateShopDto, sellerId: string) {
+    await this.findBySellerId(sellerId);
+
     await this.prisma.shop.update({
       where: { sellerId },
       data: {
-        name: dto.name,
-        description: dto.description,
-        logoUrl: dto.logoUrl,
-        bannerUrl: dto.bannerUrl,
-        contactPhone: dto.contactPhone,
-        businessType: dto.businessType,
-      },
-      include: {
-        seller: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        location: true,
+        ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.logoUrl !== undefined && { logoUrl: dto.logoUrl }),
+        ...(dto.bannerUrl !== undefined && { bannerUrl: dto.bannerUrl }),
+        ...(dto.contactPhone !== undefined && { contactPhone: dto.contactPhone }),
+        ...(dto.businessType !== undefined && { businessType: dto.businessType }),
       },
     });
 
     return this.findBySellerId(sellerId);
   }
 
-  async setLocation(shopId: string, dto: ShopLocationDto) {
+  async setLocation(sellerId: string, dto: ShopLocationDto) {
+    const shop = await this.findBySellerId(sellerId);
+
     const existing = await this.prisma.shopLocation.findUnique({
-      where: { shopId },
+      where: { shopId: shop.id },
     });
 
     if (existing) {
       return this.prisma.shopLocation.update({
-        where: { shopId },
+        where: { shopId: shop.id },
         data: {
           region: dto.region,
           city: dto.city,
@@ -132,7 +135,7 @@ export class ShopService {
 
     return this.prisma.shopLocation.create({
       data: {
-        shopId,
+        shopId: shop.id,
         region: dto.region,
         city: dto.city,
         subCity: dto.subCity,
@@ -143,5 +146,30 @@ export class ShopService {
         landmark: dto.landmark,
       },
     });
+  }
+
+  async getDashboard(sellerId: string) {
+    const shop = await this.findBySellerId(sellerId);
+
+    const [totalProducts, activeProducts, outOfStockProducts] =
+      await Promise.all([
+        this.prisma.product.count({ where: { shopId: shop.id } }),
+        this.prisma.product.count({
+          where: { shopId: shop.id, status: 'ACTIVE' },
+        }),
+        this.prisma.product.count({
+          where: { shopId: shop.id, status: 'OUT_OF_STOCK' },
+        }),
+      ]);
+
+    return {
+      shop,
+      stats: {
+        totalProducts,
+        activeProducts,
+        outOfStockProducts,
+        totalProductsValue: 0,
+      },
+    };
   }
 }

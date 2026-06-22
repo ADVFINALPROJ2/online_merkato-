@@ -1,6 +1,7 @@
-import { Controller, Post, Body, UseGuards, Patch, HttpCode, HttpStatus, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, UseGuards, HttpCode, HttpStatus, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -12,11 +13,12 @@ import { User } from '@prisma/client';
 
 @ApiTags('Shops')
 @Controller('shops')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ShopController {
   constructor(private shopService: ShopService) {}
 
   @Post()
+  @Roles(Role.SELLER)
   @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a shop (seller only)' })
@@ -29,6 +31,7 @@ export class ShopController {
   }
 
   @Patch()
+  @Roles(Role.SELLER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update shop profile (seller only)' })
   @ApiBody({ type: UpdateShopDto })
@@ -40,6 +43,7 @@ export class ShopController {
   }
 
   @Post('location')
+  @Roles(Role.SELLER)
   @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create or update shop location (seller only)' })
@@ -49,6 +53,26 @@ export class ShopController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   setLocation(@Body() dto: ShopLocationDto, @CurrentUser() user: User) {
     return this.shopService.setLocation(user.id, dto);
+  }
+
+  @Get('my')
+  @Roles(Role.SELLER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get my shop profile (seller only)' })
+  @ApiResponse({ status: 200, description: 'Shop found' })
+  @ApiResponse({ status: 404, description: 'Shop not found' })
+  getMyShop(@CurrentUser() user: User) {
+    return this.shopService.findBySellerId(user.id);
+  }
+
+  @Get('dashboard')
+  @Roles(Role.SELLER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get seller dashboard stats (seller only)' })
+  @ApiResponse({ status: 200, description: 'Dashboard data' })
+  @ApiResponse({ status: 404, description: 'Shop not found' })
+  getDashboard(@CurrentUser() user: User) {
+    return this.shopService.getDashboard(user.id);
   }
 
   @Get(':id')

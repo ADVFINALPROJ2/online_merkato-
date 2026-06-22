@@ -67,12 +67,12 @@ model Shop {
   contactPhone       String?
   businessType       String?
   verificationStatus VerificationStatus @default(PENDING)
-  sellerId           String             @unique
-  seller             User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId           String   @unique
+  seller             User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   location           ShopLocation?
   products           Product[]
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model ShopLocation {
@@ -101,20 +101,22 @@ model Category {
 }
 
 model Product {
-  id          String      @id @default(uuid())
+  id          String        @id @default(uuid())
   name        String
   description String?
   price       Float
-  stock       Int         @default(0)
+  quantity    Int           @default(0)
+  status      ProductStatus @default(ACTIVE)
+  images      String[]
   imageUrl    String?
   shopId      String
-  shop        Shop        @relation(fields: [shopId], references: [id])
+  shop        Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
   categoryId  String?
-  category    Category?   @relation(fields: [categoryId], references: [id])
+  category    Category?     @relation(fields: [categoryId], references: [id])
   orderItems  OrderItem[]
   reviews     Review[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Order {
@@ -188,4 +190,11 @@ model Notification {
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+  DRAFT
 }
