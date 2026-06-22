@@ -1,4 +1,13 @@
-import { IsString, IsNotEmpty, MinLength, MaxLength, IsOptional, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  IsOptional,
+  IsUrl,
+  IsEnum,
+  Matches,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateShopDto {
@@ -20,4 +29,26 @@ export class CreateShopDto {
   @IsOptional()
   @IsUrl()
   logoUrl?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/banner.png' })
+  @IsOptional()
+  @IsUrl()
+  bannerUrl?: string;
+
+  @ApiPropertyOptional({ example: '+251911234567' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{6,14}$/, {
+    message: 'contactPhone must be a valid phone number',
+  })
+  contactPhone?: string;
+
+  @ApiPropertyOptional({
+    example: 'ELECTRONICS',
+    enum: ['ELECTRONICS', 'FASHION', 'FOOD', 'AGRICULTURE', 'HOME', 'OTHER'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsEnum(['ELECTRONICS', 'FASHION', 'FOOD', 'AGRICULTURE', 'HOME', 'OTHER'])
+  businessType?: string;
 }

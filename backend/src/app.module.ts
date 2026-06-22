@@ -8,6 +8,9 @@ import { ReviewModule } from './review/review.module';
 import { PaymentModule } from './payment/payment.module';
 import { NotificationModule } from './notification/notification.module';
 import { CartModule } from './cart/cart.module';
+import { CategoryModule } from './category/category.module';
+import { ProductModule } from './product/product.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -19,6 +22,8 @@ import { CartModule } from './cart/cart.module';
     PaymentModule,
     NotificationModule,
     CartModule,
+    CategoryModule,
+    ProductModule,
   ],
 })
 export class AppModule {}

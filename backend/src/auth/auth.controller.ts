@@ -30,4 +30,4 @@ export class AuthController {
   login(@Body() dto: LoginSellerDto) {
     return this.authService.login(dto);
   }
-} // Final closing bracket for the AuthController class
+}
