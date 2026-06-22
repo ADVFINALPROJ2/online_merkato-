@@ -50,6 +50,7 @@ model User {
   reviewsReceived Review[]       @relation("SellerReviews")
   deliveries      Delivery[]
   notifications   Notification[]
+  craftRequests   CraftRequest[]  @relation("BuyerCrafts")
 }
 
 model Shop {
@@ -62,6 +63,18 @@ model Shop {
   products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+model CraftRequest {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  budget          Float
+  imageUrl        String?
+  buyerId         String
+  buyer           User     @relation("BuyerCrafts", fields: [buyerId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Category {
