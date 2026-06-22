@@ -160,7 +160,7 @@ model Payment {
 model Review {
   id        String   @id @default(uuid())
   buyerId   String
-  buyer     User     @relation("BuyerOrders", fields: [buyerId], references: [id])
+  buyer     User     @relation("BuyerReviews", fields: [buyerId], references: [id])
   productId String?
   product   Product? @relation(fields: [productId], references: [id])
   sellerId  String?
