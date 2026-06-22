@@ -1,0 +1,47 @@
+datasource db {
+  provider = "postgresql" // or "mysql"
+
+}
+enum Role {
+  BUYER
+  SELLER
+  DRIVER
+  ADMIN
+}
+
+enum DriverStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VehicleType {
+  MOTORCYCLE
+  BAJAJ
+  BICYCLE
+  CAR
+  FOOT
+}
+
+model User {
+  id            String         @id @default(uuid())
+  fullName      String
+  phoneNumber   String         @unique
+  role          Role
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  driverProfile DriverProfile? // One-to-one relation to their driver docs
+}
+
+model DriverProfile {
+  id               String       @id @default(uuid())
+  userId           String       @unique
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType      VehicleType
+  licensePlate     String?      // Optional for foot/bicycle riders
+  idImageUrl       String       // URL link to uploaded image file
+  licenseImageUrl  String?      // Optional for non-motorized riders
+  status           DriverStatus @default(PENDING)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
