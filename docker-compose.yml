@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: 4321
       POSTGRES_DB: digital_merkato
     ports:
-      - "5432:5432"
+      - "5440:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,7 +19,7 @@ services:
     build:
       context: ./backend
     ports:
-      - "5001:5001"
+      - "5002:5001"
     environment:
       PORT: 5001
       DATABASE_URL: postgresql://postgres:4321@postgres:5432/digital_merkato
@@ -36,7 +36,7 @@ services:
     build:
       context: ./frontend
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:5001
     depends_on:
