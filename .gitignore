@@ -48,3 +48,15 @@ coverage
 # Linux / Mac OS system junk
 .DS_Store
 Thumbs.db
+
+# Compiled Prisma seed files
+backend/prisma/*.js
+backend/prisma/*.js.map
+backend/prisma/*.d.ts
+
+# TypeScript build info
+backend/tsconfig.*.tsbuildinfo
+frontend/tsconfig.*.tsbuildinfo
+
+# Next.js generated type declarations
+frontend/next-env.d.ts
