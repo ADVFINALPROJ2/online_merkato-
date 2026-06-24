@@ -3,7 +3,15 @@
 import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { User, AuthState, LoginDto, RegisterDto } from '@/types/auth';
 import { authService } from '@/services/auth-service';
-import api from '@/services/api';
+
+function setCookie(name: string, value: string, days = 7) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+function removeCookie(name: string) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+}
 
 interface AuthContextType extends AuthState {
   login: (dto: LoginDto) => Promise<void>;
@@ -42,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await authService.login(dto);
     localStorage.setItem('token', res.accessToken);
     localStorage.setItem('user', JSON.stringify(res.user));
+    setCookie('token', res.accessToken);
     setState({ user: res.user, token: res.accessToken, isAuthenticated: true, isLoading: false });
   }, []);
 
@@ -49,12 +58,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await authService.register(dto);
     localStorage.setItem('token', res.accessToken);
     localStorage.setItem('user', JSON.stringify(res.user));
+    setCookie('token', res.accessToken);
     setState({ user: res.user, token: res.accessToken, isAuthenticated: true, isLoading: false });
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    removeCookie('token');
     setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
   }, []);
 
