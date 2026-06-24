@@ -1,37 +1,58 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, Store, Package, X } from 'lucide-react';
+import { LayoutDashboard, Store, Settings, MapPin } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 
-const links = [
+const mainLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/shop', label: 'Shop', icon: Store },
-  { href: '/products', label: 'Products', icon: Package },
+  { href: '/shop/create', label: 'Create Shop', icon: Store },
+];
+
+const shopLinks = [
+  { href: '/shop/edit', label: 'Edit Shop', icon: Settings },
+  { href: '/shop/location', label: 'Location', icon: MapPin },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
 
+  const NavItem = ({ href, label, icon: Icon }: { href: string; label: string; icon: React.ElementType }) => (
+    <Link
+      href={href}
+      className={cn(
+        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+        pathname === href
+          ? 'bg-amber-50 text-amber-700'
+          : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900',
+      )}
+    >
+      <Icon className="h-5 w-5" />
+      {label}
+    </Link>
+  );
+
   const nav = (
     <nav className="flex-1 space-y-1 p-4">
-      {links.map(({ href, label, icon: Icon }) => (
-        <Link
-          key={href}
-          href={href}
-          className={cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-            pathname === href || pathname.startsWith(href + '/')
-              ? 'bg-amber-50 text-amber-700'
-              : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900',
-          )}
-        >
-          <Icon className="h-5 w-5" />
-          {label}
-        </Link>
+      {mainLinks.map((link) => (
+        <NavItem key={link.href} {...link} />
+      ))}
+
+      <div className="pt-2 pb-1">
+        <Separator />
+      </div>
+
+      <p className="flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-stone-400">
+        <Store className="h-3.5 w-3.5" />
+        Shop
+      </p>
+
+      {shopLinks.map((link) => (
+        <NavItem key={link.href} {...link} />
       ))}
     </nav>
   );
