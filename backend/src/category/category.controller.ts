@@ -28,8 +28,12 @@ export class CategoryController {
 
   @Get()
   @ApiOperation({ summary: 'Get all categories' })
+  @ApiQuery({ name: 'tree', required: false, type: Boolean, description: 'Return hierarchical tree' })
   @ApiResponse({ status: 200, description: 'List of categories' })
-  findAll() {
+  findAll(@Query('tree') tree?: string) {
+    if (tree === 'true') {
+      return this.categoryService.findTree();
+    }
     return this.categoryService.findAll();
   }
 
