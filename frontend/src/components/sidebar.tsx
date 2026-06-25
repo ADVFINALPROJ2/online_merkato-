@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, Store, Settings, MapPin, Package } from 'lucide-react';
+import { LayoutDashboard, Store, Settings, MapPin, Package, FolderTree, ClipboardList } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import { Separator } from '@/components/ui/separator';
 const mainLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/products', label: 'Products', icon: Package },
+  { href: '/categories', label: 'Categories', icon: FolderTree },
+  { href: '/inventory', label: 'Inventory', icon: ClipboardList },
   { href: '/shop/create', label: 'Create Shop', icon: Store },
 ];
 
