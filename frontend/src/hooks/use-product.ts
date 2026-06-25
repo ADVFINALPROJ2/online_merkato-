@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productService } from '@/services/product-service';
-import type { CreateProductDto, UpdateProductDto } from '@/types/product';
+import type { CreateProductDto, UpdateProductDto, Product, ProductStatus } from '@/types/product';
 
 export function useProducts() {
   return useQuery({
@@ -49,7 +49,23 @@ export function useDeleteProduct() {
 
   return useMutation({
     mutationFn: (id: string) => productService.remove(id),
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['products'] });
+
+      const previous = queryClient.getQueryData<Product[]>(['products']);
+
+      queryClient.setQueryData<Product[]>(['products'], (old) =>
+        old?.filter((p) => p.id !== id),
+      );
+
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['products'], context.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['shop-dashboard'] });
     },
@@ -62,7 +78,87 @@ export function useUpdateProductStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       productService.updateStatus(id, status),
-    onSuccess: () => {
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: ['products'] });
+
+      const previous = queryClient.getQueryData<Product[]>(['products']);
+
+      queryClient.setQueryData<Product[]>(['products'], (old) =>
+        old?.map((p) => (p.id === id ? { ...p, status: status as ProductStatus } : p)),
+      );
+
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['products'], context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['shop-dashboard'] });
+    },
+  });
+}
+
+export function useUpdateProductQuantity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
+      productService.updateQuantity(id, quantity),
+    onMutate: async ({ id, quantity }) => {
+      await queryClient.cancelQueries({ queryKey: ['products'] });
+
+      const previous = queryClient.getQueryData<Product[]>(['products']);
+
+      const newStatus = quantity === 0 ? 'OUT_OF_STOCK' as ProductStatus : undefined;
+
+      queryClient.setQueryData<Product[]>(['products'], (old) =>
+        old?.map((p) =>
+          p.id === id
+            ? { ...p, quantity, ...(newStatus ? { status: newStatus } : {}) }
+            : p,
+        ),
+      );
+
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['products'], context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['shop-dashboard'] });
+    },
+  });
+}
+
+export function useUpdateProductPrice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, price }: { id: string; price: number }) =>
+      productService.updatePrice(id, price),
+    onMutate: async ({ id, price }) => {
+      await queryClient.cancelQueries({ queryKey: ['products'] });
+
+      const previous = queryClient.getQueryData<Product[]>(['products']);
+
+      queryClient.setQueryData<Product[]>(['products'], (old) =>
+        old?.map((p) => (p.id === id ? { ...p, price } : p)),
+      );
+
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['products'], context.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['shop-dashboard'] });
     },
