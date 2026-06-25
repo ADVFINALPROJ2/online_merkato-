@@ -31,4 +31,14 @@ export const productService = {
     const { data } = await api.patch<Product>(`/products/${id}/status`, { status });
     return data;
   },
+
+  async updateQuantity(id: string, quantity: number): Promise<Product> {
+    const { data } = await api.patch<Product>(`/products/${id}/inventory`, { quantity });
+    return data;
+  },
+
+  async updatePrice(id: string, price: number): Promise<Product> {
+    const { data } = await api.patch<Product>(`/products/${id}`, { price });
+    return data;
+  },
 };
