@@ -10,8 +10,6 @@ import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 export class CartService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // ─── Helper ───────────────────────────────────────────────────────────────
-
   private async getOrCreateCart(userId: string) {
     let cart = await this.prisma.cart.findUnique({ where: { userId } });
     if (!cart) {
@@ -19,8 +17,6 @@ export class CartService {
     }
     return cart;
   }
-
-  // ─── #26 View cart + #27 Calculate total ──────────────────────────────────
 
   async getCart(userId: string) {
     const cart = await this.getOrCreateCart(userId);
@@ -34,7 +30,7 @@ export class CartService {
             name: true,
             price: true,
             isActive: true,
-            images: { take: 1 },
+            images: true,
             shop: { select: { id: true, name: true } },
           },
         },
@@ -44,8 +40,6 @@ export class CartService {
 
     return this.buildCartSummary(items);
   }
-
-  // ─── #23 Add item ──────────────────────────────────────────────────────────
 
   async addItem(userId: string, dto: AddToCartDto) {
     const product = await this.prisma.product.findUnique({
@@ -65,7 +59,6 @@ export class CartService {
     });
 
     if (existingItem) {
-      // Product already in cart — just increase quantity
       await this.prisma.cartItem.update({
         where: { id: existingItem.id },
         data: { quantity: existingItem.quantity + dto.quantity },
@@ -82,8 +75,6 @@ export class CartService {
 
     return this.getCart(userId);
   }
-
-  // ─── #25 Update quantity ───────────────────────────────────────────────────
 
   async updateItem(userId: string, itemId: string, dto: UpdateCartItemDto) {
     const cart = await this.getOrCreateCart(userId);
@@ -102,8 +93,6 @@ export class CartService {
     return this.getCart(userId);
   }
 
-  // ─── #24 Remove item ───────────────────────────────────────────────────────
-
   async removeItem(userId: string, itemId: string) {
     const cart = await this.getOrCreateCart(userId);
 
@@ -118,15 +107,11 @@ export class CartService {
     return this.getCart(userId);
   }
 
-  // ─── Clear cart (called after checkout) ───────────────────────────────────
-
   async clearCart(userId: string) {
     const cart = await this.getOrCreateCart(userId);
     await this.prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
     return this.getCart(userId);
   }
-
-  // ─── #27 Total price calculation ──────────────────────────────────────────
 
   private buildCartSummary(items: any[]) {
     let total = 0;
