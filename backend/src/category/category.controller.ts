@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -6,8 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiResponse } from '@nestjs/swagger';
 @ApiTags('Categories')
 @Controller('categories')
 export class CategoryController {
@@ -23,7 +22,6 @@ export class CategoryController {
   }
 
   @Get()
-<<<<<<< HEAD
   @ApiOperation({ summary: 'Get all categories' })
   @ApiQuery({ name: 'tree', required: false, type: Boolean, description: 'Return hierarchical tree' })
   @ApiResponse({ status: 200, description: 'List of categories' })
@@ -31,12 +29,9 @@ export class CategoryController {
     if (tree === 'true') {
       return this.categoryService.findTree();
     }
-=======
-  @ApiOperation({ summary: 'Get all product categories' })
-  findAll() {
->>>>>>> fyorina
     return this.categoryService.findAll();
   }
+  
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a single category by ID' })
@@ -61,4 +56,4 @@ export class CategoryController {
   remove(@Param('id') id: string) {
     return this.categoryService.remove(id);
   }
-}
+ }
