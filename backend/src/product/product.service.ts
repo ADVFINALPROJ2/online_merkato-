@@ -2,78 +2,83 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class ProductService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateProductDto, shopId: string) {
-    if (dto.categoryId) {
-      const categoryExists = await this.prisma.category.findUnique({
-        where: { id: dto.categoryId },
-      });
-      if (!categoryExists) {
-        throw new NotFoundException(`Category with ID ${dto.categoryId} does not exist`);
-      }
+  async create(createProductDto: CreateProductDto, sellerId: string) {
+    const shop = await this.prisma.shop.findUnique({
+      where: { sellerId },
+    });
+
+    if (!shop) {
+      throw new NotFoundException('Seller must have an active shop setup to post items.');
     }
 
     return this.prisma.product.create({
       data: {
-        name: dto.title, // Maps your DTO 'title' to your DB 'name'
-        description: dto.description,
-        price: dto.price,
-        categoryId: dto.categoryId,
-        shopId: shopId, // Maps to your DB 'shopId'
-        stock: 1, // Fallback placeholder since 'stock' is required by your schema
+        name: createProductDto.name,
+        description: createProductDto.description,
+        price: createProductDto.price,
+        quantity: createProductDto.quantity ?? 1,
+        images: createProductDto.images ?? [],
+        status: createProductDto.status,
+        categoryId: createProductDto.categoryId,
+        shopId: shop.id,
       },
     });
   }
 
   async findAll() {
     return this.prisma.product.findMany({
-      include: { category: true },
+      include: { shop: true, category: true },
     });
   }
 
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { category: true },
+      include: { shop: true, category: true },
     });
+
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException(`Product entry with ID ${id} was not found.`);
     }
     return product;
   }
 
-  async update(id: string, dto: UpdateProductDto, shopId: string) {
+  async update(id: string, updateProductDto: UpdateProductDto, userId: string, role: string) {
     const product = await this.findOne(id);
 
-    if (product.shopId !== shopId) {
-      throw new ForbiddenException('Access Denied: You can only edit your own products');
+    if (role !== Role.ADMIN && product.shop.sellerId !== userId) {
+      throw new ForbiddenException('Unauthorized control action on this inventory profile.');
     }
-
-    // Prepare data mapping title -> name safely if provided
-    const { title, ...remainingDto } = dto;
-    const updateData = {
-      ...remainingDto,
-      ...(title ? { name: title } : {}),
-    };
 
     return this.prisma.product.update({
       where: { id },
-      data: updateData,
+      data: {
+        name: updateProductDto.name,
+        description: updateProductDto.description,
+        price: updateProductDto.price,
+        quantity: updateProductDto.quantity,
+        images: updateProductDto.images,
+        status: updateProductDto.status,
+        categoryId: updateProductDto.categoryId,
+      },
     });
   }
 
-  async remove(id: string, shopId: string) {
+  async remove(id: string, userId: string, role: string) {
     const product = await this.findOne(id);
 
-    if (product.shopId !== shopId) {
-      throw new ForbiddenException('Access Denied: You can only delete your own products');
+    if (role !== Role.ADMIN && product.shop.sellerId !== userId) {
+      throw new ForbiddenException('Unauthorized control action on this inventory profile.');
     }
 
-    await this.prisma.product.delete({ where: { id } });
-    return { message: 'Product successfully removed from marketplace' };
+    return this.prisma.product.delete({
+      where: { id },
+    });
   }
 }

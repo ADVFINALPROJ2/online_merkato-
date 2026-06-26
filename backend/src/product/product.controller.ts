@@ -1,14 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 import { Role } from '@prisma/client';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Product')
+@ApiTags('products')
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
@@ -16,43 +16,36 @@ export class ProductController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.SELLER)
-  @ApiOperation({ summary: 'Create a new product (Sellers Only)' })
-  create(@Body() createProductDto: CreateProductDto, @Req() req: any) {
-    // If your token directly payload maps user id as the shop scope anchor:
-    const shopId = req.user.shopId || req.user.id || req.user.sub;
-    return this.productService.create(createProductDto, shopId);
+  @Roles(Role.SELLER, Role.ADMIN) 
+  create(@Body() createProductDto: CreateProductDto, @Request() req: any) {
+    return this.productService.create(createProductDto, req.user.id);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all marketplace products (Public)' })
   findAll() {
     return this.productService.findAll();
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a specific product by ID (Public)' })
-  findOne(@Param('id') id: string) {
-    return this.productService.findOne(id);
   }
 
   @Patch(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.SELLER)
-  @ApiOperation({ summary: 'Update an owned product (Owner Only)' })
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @Req() req: any) {
-    const shopId = req.user.shopId || req.user.id || req.user.sub;
-    return this.productService.update(id, updateProductDto, shopId);
+  @Roles(Role.SELLER, Role.ADMIN)
+  update(
+    @Param('id') id: string, 
+    @Body() updateProductDto: UpdateProductDto, 
+    @Request() req: any 
+  ) {
+    return this.productService.update(id, updateProductDto, req.user.id, req.user.role);
   }
 
   @Delete(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.SELLER)
-  @ApiOperation({ summary: 'Delete an owned product (Owner Only)' })
-  remove(@Param('id') id: string, @Req() req: any) {
-    const shopId = req.user.shopId || req.user.id || req.user.sub;
-    return this.productService.remove(id, shopId);
+  @Roles(Role.SELLER, Role.ADMIN)
+  remove(
+    @Param('id') id: string, 
+    @Request() req: any 
+  ) {
+    return this.productService.remove(id, req.user.id, req.user.role);
   }
 }
