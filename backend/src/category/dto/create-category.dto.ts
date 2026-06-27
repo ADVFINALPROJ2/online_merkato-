@@ -1,18 +1,15 @@
-import { IsString, IsNotEmpty, MinLength, MaxLength, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
   @ApiProperty({ example: 'Electronics' })
   @IsString()
-  @IsNotEmpty()
-  @MinLength(2)
-  @MaxLength(100)
-  name: string;
+  @IsNotEmpty() // <-- Must be required
+  name!: string; // <-- NO question mark here!
 
-  @ApiPropertyOptional({ example: 'Electronic devices and accessories' })
-  @IsOptional()
+  @ApiProperty({ example: 'Devices and gadgets', required: false })
   @IsString()
-  @MaxLength(500)
+  @IsOptional()
   description?: string;
 
   @ApiPropertyOptional({ example: 'uuid-of-parent-category' })
@@ -20,3 +17,4 @@ export class CreateCategoryDto {
   @IsUUID()
   parentId?: string;
 }
+

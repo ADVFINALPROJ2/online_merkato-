@@ -1,37 +1,23 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class RecommendationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Personalized recommendations for logged-in user
   async getForUser(userId: string) {
     const pastOrders = await this.prisma.order.findMany({
-      where: { userId },
-      select: {
-        items: { select: { product: { select: { categoryId: true } } } },
-      },
+      where: { buyerId: userId },
+      select: { items: { select: { product: { select: { categoryId: true } } } } },
       take: 20,
       orderBy: { createdAt: 'desc' },
     });
-
-    const categoryIds = [
-      ...new Set(
-        pastOrders
-          .flatMap((o: any) => o.items.map((i: any) => i.product.categoryId))
-          .filter(Boolean),
-      ),
-    ] as string[];
-
+    const categoryIds = [...new Set(
+      pastOrders.flatMap((o: any) => o.items.map((i: any) => i.product.categoryId)).filter(Boolean),
+    )] as string[];
     if (categoryIds.length === 0) return this.getTrending();
-
     const products = await this.prisma.product.findMany({
-      where: {
-        isActive: true,
-        categoryId: { in: categoryIds },
-        NOT: { orderItems: { some: { order: { userId } } } },
-      },
+      where: { isActive: true, categoryId: { in: categoryIds } },
       orderBy: { orderItems: { _count: 'desc' } },
       take: 20,
       include: {
@@ -40,25 +26,17 @@ export class RecommendationService {
         _count: { select: { reviews: true } },
       },
     });
-
     return { data: products };
   }
 
-  // #22 Related products — same category, sorted by popularity
   async getRelatedProducts(productId: string) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
       select: { categoryId: true },
     });
-
     if (!product) return { data: [] };
-
     const related = await this.prisma.product.findMany({
-      where: {
-        isActive: true,
-        categoryId: product.categoryId,
-        NOT: { id: productId },
-      },
+      where: { isActive: true, categoryId: product.categoryId, NOT: { id: productId } },
       orderBy: { orderItems: { _count: 'desc' } },
       take: 10,
       include: {
@@ -66,21 +44,16 @@ export class RecommendationService {
         _count: { select: { reviews: true } },
       },
     });
-
     return { data: related };
   }
 
-  // Trending — most ordered in last 7 days
   async getTrending() {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
     const trending = await this.prisma.product.findMany({
       where: {
         isActive: true,
-        orderItems: {
-          some: { order: { createdAt: { gte: sevenDaysAgo } } },
-        },
+        orderItems: { some: { order: { createdAt: { gte: sevenDaysAgo } } } },
       },
       orderBy: { orderItems: { _count: 'desc' } },
       take: 20,
@@ -90,7 +63,6 @@ export class RecommendationService {
         _count: { select: { reviews: true } },
       },
     });
-
     return { data: trending };
   }
 }

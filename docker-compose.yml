@@ -33,14 +33,15 @@ services:
         condition: service_healthy
 
   frontend:
-    build:
-      context: ./frontend
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:5001
-    depends_on:
-      - backend
+      - NEXT_PUBLIC_API_URL=http://localhost:5002
+    command: npm run dev
 
 volumes:
   postgres_data:
