@@ -1,7 +1,12 @@
-datasource db {
-  provider = "postgresql" // or "mysql"
-
+generator client {
+  provider = "prisma-client-js"
 }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 enum Role {
   BUYER
   SELLER
@@ -25,23 +30,103 @@ enum VehicleType {
 
 model User {
   id            String         @id @default(uuid())
-  fullName      String
+  firstName     String
+  lastName      String
+  email         String         @unique
+  password      String
   phoneNumber   String         @unique
   role          Role
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  driverProfile DriverProfile? // One-to-one relation to their driver docs
+  driverProfile DriverProfile?
+  notifications Notification[]
+  shops         Shop[]
+  orders        Order[]
+  reviews       Review[]
 }
 
 model DriverProfile {
-  id               String       @id @default(uuid())
-  userId           String       @unique
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vehicleType      VehicleType
-  licensePlate     String?      // Optional for foot/bicycle riders
-  idImageUrl       String       // URL link to uploaded image file
-  licenseImageUrl  String?      // Optional for non-motorized riders
-  status           DriverStatus @default(PENDING)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  id              String       @id @default(uuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType     VehicleType
+  licensePlate    String?
+  idImageUrl      String
+  licenseImageUrl String?
+  status          DriverStatus @default(PENDING)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String   @default("")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Shop {
+  id        String    @id @default(uuid())
+  name      String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id         String      @id @default(uuid())
+  name       String
+  price      Float
+  shopId     String
+  shop       Shop        @relation(fields: [shopId], references: [id])
+  orderItems OrderItem[]
+  reviews    Review[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+  payments  Payment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  amount    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

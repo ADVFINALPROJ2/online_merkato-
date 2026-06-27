@@ -12,6 +12,7 @@ import { CategoryModule } from './category/category.module';
 import { BuyerModule } from './buyer/buyer.module';
 import { CartModule } from './cart/cart.module';
 import { I18nModule } from './i18n/i18n.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -28,6 +29,8 @@ import { I18nModule } from './i18n/i18n.module';
     BuyerModule,
     CartModule,
     I18nModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
+

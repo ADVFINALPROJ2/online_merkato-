@@ -1,26 +1,24 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
+<<<<<<< Updated upstream
 import { RegisterSellerDto } from './dto/register-seller.dto';
 import { LoginSellerDto } from './dto/login-seller.dto'; // Added this import
+=======
+import { RegisterDriverDto } from './dto/register-driver.dto';
+import { LoginDto } from './dto/login.dto';
+>>>>>>> Stashed changes
 
-@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post('register')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new seller' })
-  @ApiBody({ type: RegisterSellerDto })
-  @ApiResponse({ status: 201, description: 'Seller registered successfully' })
-  @ApiResponse({ status: 409, description: 'Email already exists' })
-  @ApiResponse({ status: 400, description: 'Validation failed' })
-  register(@Body() dto: RegisterSellerDto) {
-    return this.authService.register(dto);
+  @Post('register/driver')
+  async registerDriver(@Body() dto: RegisterDriverDto) {
+    return this.authService.registerDriver(dto);
   }
 
   @Post('login')
+<<<<<<< Updated upstream
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log in an existing seller' })
   @ApiBody({ type: LoginSellerDto })
@@ -31,3 +29,9 @@ export class AuthController {
     return this.authService.login(dto);
   }
 }
+=======
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
+  }
+}
+>>>>>>> Stashed changes
