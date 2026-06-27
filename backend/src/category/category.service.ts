@@ -12,7 +12,7 @@ export class CategoryService {
       where: { name: dto.name },
     });
     if (existing) {
-      throw new ConflictException('Category with this name already exists');
+      throw new ConflictException('A category with this name already exists');
     }
 
     if (dto.parentId) {
@@ -83,7 +83,7 @@ export class CategoryService {
       },
     });
     if (!category) {
-      throw new NotFoundException('Category not found');
+      throw new NotFoundException(`Category with ID ${id} not found`);
     }
     return category;
   }
