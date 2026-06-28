@@ -1,18 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 export default function ChatPage() {
-  const router = useRouter();
+  const params = useParams();
+  const id = params?.id; // Safely grab the dynamic order [id] from the App Router path
+
   const [messages, setMessages] = useState<{ id: string; text: string; sender: string }[]>([]);
   const [newMessage, setNewMessage] = useState('');
 
   useEffect(() => {
-    // Simulate fetching messages from the backend
+    if (!id) return;
+
+    // Fetch messages from the backend using the current route ID
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/chat/messages/${router.query.id}`);
+        const res = await fetch(`http://localhost:3000/chat/messages/${id}`);
         const data = await res.json();
         setMessages(data);
       } catch (err) {
@@ -21,11 +25,13 @@ export default function ChatPage() {
     };
 
     fetchMessages();
-  }, [router.query.id]);
+  }, [id]);
 
   const handleSend = async () => {
+    if (!id) return;
+
     try {
-      const res = await fetch(`http://localhost:3000/chat/messages/${router.query.id}`, {
+      const res = await fetch(`http://localhost:3000/chat/messages/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: newMessage, sender: 'driver' }),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 interface OrderDetails {
   id: string;
@@ -30,17 +30,21 @@ interface OrderDetails {
 }
 
 export default function OrderPage() {
-  const router = useRouter();
+  const params = useParams();
+  const id = params?.id; // Safely pull dynamic parameter via App Router hooks
+
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [status, setStatus] = useState({ type: '', message: '' });
 
   useEffect(() => {
-    fetchOrderDetails();
-  }, []);
+    if (id) {
+      fetchOrderDetails();
+    }
+  }, [id]);
 
   const fetchOrderDetails = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/driver/orders/${router.query.id}`);
+      const res = await fetch(`http://localhost:3000/driver/orders/${id}`);
       const data = await res.json();
       if (res.ok) {
         setOrder(data);
