@@ -16,7 +16,7 @@ export default function ChatPage() {
     // Fetch messages from the backend using the current route ID
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/chat/messages/${id}`);
+        const res = await fetch(`http://localhost:3001/chat/messages/${id}`);
         const data = await res.json();
         setMessages(data);
       } catch (err) {
@@ -31,7 +31,7 @@ export default function ChatPage() {
     if (!id) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/chat/messages/${id}`, {
+      const res = await fetch(`http://localhost:3001/chat/messages/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: newMessage, sender: 'driver' }),

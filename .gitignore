@@ -60,3 +60,4 @@ frontend/tsconfig.*.tsbuildinfo
 
 # Next.js generated type declarations
 frontend/next-env.d.ts
+.aider*

@@ -7,7 +7,10 @@ export class DeliveryService {
 
   async assignDriverToOrder(orderId: string, driverUserId: string) {
     const [order, driver] = await Promise.all([
-      this.prisma.order.findUnique({ where: { id: orderId } }),
+      this.prisma.order.findUnique({ 
+        where: { id: orderId },
+        include: { delivery: true } 
+      }),
       this.prisma.driverProfile.findUnique({ where: { userId: driverUserId } }),
     ]);
 
@@ -26,9 +29,12 @@ export class DeliveryService {
   }
 
   async acceptOrder(orderId: string) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    const order = await this.prisma.order.findUnique({ 
+      where: { id: orderId },
+      include: { delivery: true } 
+    });
 
-    if (!order || order.delivery?.status !== 'ASSIGNED') {
+    if (!order || (order as any).delivery?.status !== 'ASSIGNED') {
       throw new Error('Invalid order or delivery status');
     }
 
@@ -39,9 +45,12 @@ export class DeliveryService {
   }
 
   async pickUpOrder(orderId: string) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    const order = await this.prisma.order.findUnique({ 
+      where: { id: orderId },
+      include: { delivery: true } 
+    });
 
-    if (!order || order.delivery?.status !== 'ACCEPTED') {
+    if (!order || (order as any).delivery?.status !== 'ACCEPTED') {
       throw new Error('Invalid order or delivery status');
     }
 
@@ -52,9 +61,12 @@ export class DeliveryService {
   }
 
   async completeOrder(orderId: string) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    const order = await this.prisma.order.findUnique({ 
+      where: { id: orderId },
+      include: { delivery: true } 
+    });
 
-    if (!order || order.delivery?.status !== 'PICKED_UP') {
+    if (!order || (order as any).delivery?.status !== 'PICKED_UP') {
       throw new Error('Invalid order or delivery status');
     }
 

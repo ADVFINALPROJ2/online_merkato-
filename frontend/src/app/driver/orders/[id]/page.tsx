@@ -44,7 +44,7 @@ export default function OrderPage() {
 
   const fetchOrderDetails = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/driver/orders/${id}`);
+      const res = await fetch(`http://localhost:3001/driver/orders/${id}`);
       const data = await res.json();
       if (res.ok) {
         setOrder(data);

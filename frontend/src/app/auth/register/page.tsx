@@ -24,7 +24,7 @@ export default function DriverRegister() {
     e.preventDefault();
     setStatusMessage('');
     try {
-      const res = await fetch('http://localhost:3000/auth/register/driver', {
+      const res = await fetch('http://localhost:3001/auth/register/driver', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

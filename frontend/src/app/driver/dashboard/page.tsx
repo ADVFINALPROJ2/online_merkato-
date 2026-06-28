@@ -27,7 +27,7 @@ export default function DriverDashboard() {
 
   const fetchPendingDrivers = async () => {
     try {
-      const res = await fetch('http://localhost:3000/admin/drivers/pending');
+      const res = await fetch('http://localhost:3001/admin/drivers/pending');
       const data = await res.json();
       if (res.ok) {
         setDrivers(data);
@@ -43,7 +43,7 @@ export default function DriverDashboard() {
   const handleDecision = async (id: string, decision: 'APPROVED' | 'REJECTED') => {
     setStatus({ type: 'loading', message: 'Updating driver status...' });
     try {
-      const res = await fetch(`http://localhost:3000/admin/drivers/${id}/status`, {
+      const res = await fetch(`http://localhost:3001/admin/drivers/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: decision }),
@@ -64,7 +64,7 @@ export default function DriverDashboard() {
     const password = document.getElementById('password') as HTMLInputElement;
 
     try {
-      const res = await fetch('http://localhost:3000/driver/login', {
+      const res = await fetch('http://localhost:3001/driver/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.value, password: password.value }),

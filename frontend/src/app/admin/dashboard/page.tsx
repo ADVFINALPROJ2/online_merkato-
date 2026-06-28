@@ -21,7 +21,7 @@ export default function AdminDashboard() {
 
   const fetchPendingDrivers = async () => {
     try {
-      const res = await fetch('http://localhost:3000/admin/drivers/pending');
+      const res = await fetch('http://localhost:3001/admin/drivers/pending');
       const data = await res.json();
       if (res.ok) {
         setDrivers(data);
@@ -41,7 +41,7 @@ export default function AdminDashboard() {
   const handleDecision = async (id: string, decision: 'APPROVED' | 'REJECTED') => {
     setStatus({ type: 'loading', message: 'Updating driver status...' });
     try {
-      const res = await fetch(`http://localhost:3000/admin/drivers/${id}/status`, {
+      const res = await fetch(`http://localhost:3001/admin/drivers/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: decision }),

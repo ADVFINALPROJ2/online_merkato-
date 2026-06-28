@@ -91,6 +91,7 @@ model Shop {
   bannerUrl    String?
   contactPhone String?
   businessType String?
+  verificationStatus String  @default("PENDING")
   sellerId     String        @unique
   seller       User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   products     Product[]
@@ -245,4 +246,15 @@ model Notification {
   message   String   @default("")
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model ChatMessage {
+  id         String   @id @default(uuid())
+  orderId    String
+  senderId   String
+  receiverId String
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([orderId, createdAt])
 }
