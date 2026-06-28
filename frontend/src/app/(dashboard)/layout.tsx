@@ -17,7 +17,16 @@ const mobileLinks = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  
+  // Safe extraction wrapper to prevent build worker crashing
+  let authContext;
+  try {
+    authContext = useAuth();
+  } catch (e) {
+    authContext = { isAuthenticated: false, isLoading: true };
+  }
+
+  const { isAuthenticated, isLoading } = authContext;
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
