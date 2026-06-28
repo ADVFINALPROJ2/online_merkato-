@@ -10,4 +10,10 @@ export class DriverController {
   async register(@Body() dto: RegisterDriverDto) {
     return this.driverService.register(dto);
   }
+
+  @Post('login')
+  async login(@Body() body: { email: string; password: string }) {
+    const { email, password } = body;
+    return this.driverService.login(email, password);
+  }
 }
