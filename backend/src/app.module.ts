@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -9,6 +9,9 @@ import { PaymentModule } from './payment/payment.module';
 import { NotificationModule } from './notification/notification.module';
 import { ProductModule } from './product/product.module';
 import { CategoryModule } from './category/category.module';
+import { BuyerModule } from './buyer/buyer.module';
+import { CartModule } from './cart/cart.module';
+import { I18nModule } from './i18n/i18n.module';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { CategoryModule } from './category/category.module';
     NotificationModule,
     ProductModule,
     CategoryModule,
+    BuyerModule,
+    CartModule,
+    I18nModule,
   ],
 })
 export class AppModule {}

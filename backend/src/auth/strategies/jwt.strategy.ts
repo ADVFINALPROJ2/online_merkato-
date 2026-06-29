@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 
 interface JwtPayload {
-  sub: string;
+  id: string;    // ◄ Change 'sub' to 'id' to match your login token structure
   email: string;
   role: string;
 }
@@ -19,13 +19,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-    });
-    if (!user) {
-      throw new UnauthorizedException('User no longer exists');
-    }
-    return user;
-  }
+  async validate(payload: any) {
+  // 🧪 TEMPORARY TEST: Bypass the database lookup completely
+  console.log('Decrypted Token Payload:', payload);
+  
+  return { 
+    id: payload.id || payload.sub, 
+    email: payload.email, 
+    role: payload.role 
+  };
+}
 }

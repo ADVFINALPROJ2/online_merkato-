@@ -9,9 +9,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'secret',
-      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
-    }),
+  secret: process.env.JWT_SECRET || 'OnlineMerkatoSuperSecretKey2026', // ◄ Matches .env
+  signOptions: { expiresIn: '7d' },
+}),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

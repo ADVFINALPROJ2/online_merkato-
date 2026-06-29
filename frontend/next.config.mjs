@@ -1,7 +1,5 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
-  outputFileTracingRoot: __dirname,
+const nextConfig = {
+  output: 'standalone',
   async rewrites() {
     return [
       {
