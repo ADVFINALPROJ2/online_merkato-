@@ -40,15 +40,15 @@ enum VerificationStatus {
 }
 
 model User {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   firstName    String
   lastName     String
-  email        String?  @unique
-  phoneNumber  String
+  email        String?   @unique
+  phoneNumber  String    @unique
   password     String
-  role         Role     @default(SELLER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         Role      @default(SELLER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime    @updatedAt
 
   shop            Shop?
   ordersAsBuyer   Order[]        @relation("BuyerOrders")
@@ -56,6 +56,7 @@ model User {
   reviewsReceived Review[]       @relation("SellerReviews")
   deliveries      Delivery[]
   notifications   Notification[]
+  refreshTokens   RefreshToken[]
 }
 
 model Shop {
@@ -192,6 +193,24 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id])
   message   String
   isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
   createdAt DateTime @default(now())
 }
 

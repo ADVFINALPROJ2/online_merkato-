@@ -10,4 +10,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleDestroy() {
     await this.$disconnect();
   }
+
+  async cleanOldRefreshTokens() {
+    const expired = new Date(Date.now() - 30 * 24 * 3600000);
+    return this.refreshToken.deleteMany({ where: { expiresAt: { lt: expired } } });
+  }
+
+  async cleanOldPasswordResetTokens() {
+    const expired = new Date(Date.now() - 1 * 3600000);
+    return this.passwordResetToken.deleteMany({ where: { expiresAt: { lt: expired } } });
+  }
 }
