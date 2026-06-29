@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4321
+      POSTGRES_DB: digital_merkato
+    ports:
+      - "5440:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5002:5001"
+    environment:
+      PORT: 5001
+      DATABASE_URL: postgresql://postgres:4321@postgres:5432/digital_merkato
+      JWT_SECRET: digital-merkato-secret-key
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost:3000
+      CHAPA_SECRET_KEY: ""
+      CHAPA_API_URL: https://api.chapa.co/v1
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5002
+    command: npm run dev
+
+volumes:
+  postgres_data:

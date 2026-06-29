@@ -31,18 +31,18 @@ CREATE TABLE "ShopLocation" (
     CONSTRAINT "ShopLocation_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Category" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+-- AlterTable (Category already exists from previous migration)
+ALTER TABLE "Category" ADD COLUMN "description" TEXT;
+ALTER TABLE "Category" ADD COLUMN "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "Category" ADD COLUMN "updatedAt" TIMESTAMP(3) NOT NULL;
 
-    CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
-);
+-- Drop old Product table (created in previous migration) and recreate
+ALTER TABLE "OrderItem" DROP CONSTRAINT "OrderItem_productId_fkey";
+ALTER TABLE "Review" DROP CONSTRAINT "Review_productId_fkey";
+ALTER TABLE "Product" DROP CONSTRAINT "Product_shopId_fkey";
+ALTER TABLE "Product" DROP CONSTRAINT "Product_categoryId_fkey";
+DROP TABLE "Product";
 
--- CreateTable
 CREATE TABLE "Product" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -62,8 +62,7 @@ CREATE TABLE "Product" (
 -- CreateIndex
 CREATE UNIQUE INDEX "ShopLocation_shopId_key" ON "ShopLocation"("shopId");
 
--- CreateIndex
-CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
+-- Category_name_key already exists from previous migration
 
 -- AddForeignKey
 ALTER TABLE "ShopLocation" ADD CONSTRAINT "ShopLocation_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -73,3 +72,7 @@ ALTER TABLE "Product" ADD CONSTRAINT "Product_shopId_fkey" FOREIGN KEY ("shopId"
 
 -- AddForeignKey
 ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Restore foreign keys for OrderItem and Review
+ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Review" ADD CONSTRAINT "Review_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -151,7 +151,7 @@ export class ShopService {
   async getDashboard(sellerId: string) {
     const shop = await this.findBySellerId(sellerId);
 
-    const [totalProducts, activeProducts, outOfStockProducts] =
+    const [totalProducts, activeProducts, outOfStockProducts, inventoryAgg] =
       await Promise.all([
         this.prisma.product.count({ where: { shopId: shop.id } }),
         this.prisma.product.count({
@@ -160,7 +160,15 @@ export class ShopService {
         this.prisma.product.count({
           where: { shopId: shop.id, status: 'OUT_OF_STOCK' },
         }),
+        this.prisma.product.aggregate({
+          where: { shopId: shop.id },
+          _sum: { price: true, quantity: true },
+        }),
       ]);
+
+    const totalPriceValue = inventoryAgg._sum.price || 0;
+    const totalQty = inventoryAgg._sum.quantity || 0;
+    const totalProductsValue = totalPriceValue * totalQty;
 
     return {
       shop,
@@ -168,7 +176,7 @@ export class ShopService {
         totalProducts,
         activeProducts,
         outOfStockProducts,
-        totalProductsValue: 0,
+        totalProductsValue,
       },
     };
   }
