@@ -12,6 +12,52 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  private readonly REFRESH_TOKEN_DAYS = 30;
+  private readonly ACCESS_TOKEN_EXPIRY = '15m';
+  private readonly RESET_TOKEN_HOURS = 1;
+
+  private generateTokens(user: { id: string; email: string | null; role: string }) {
+    const accessToken = this.jwtService.sign(
+      { sub: user.id, email: user.email, role: user.role },
+      { expiresIn: this.ACCESS_TOKEN_EXPIRY },
+    );
+    return { accessToken };
+  }
+
+  private async generateRefreshToken(userId: string): Promise<string> {
+    const raw = crypto.randomBytes(48).toString('hex');
+    const hashed = await bcrypt.hash(raw, 10);
+    const expiresAt = new Date(Date.now() + this.REFRESH_TOKEN_DAYS * 86400000);
+
+    await this.prisma.refreshToken.create({
+      data: { token: hashed, userId, expiresAt },
+    });
+
+    return raw;
+  }
+
+  private async cleanExpiredRefreshTokens(userId: string) {
+    await this.prisma.refreshToken.deleteMany({
+      where: { userId, expiresAt: { lt: new Date() } },
+    });
+  }
+
+  private buildUserResponse(user: { id: string; firstName: string; lastName: string; email: string | null; phoneNumber: string; role: string }) {
+    const tokens = this.generateTokens(user);
+    return {
+      message: 'Operation successful',
+      accessToken: tokens.accessToken,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+      },
+    };
+  }
+
   async register(dto: RegisterSellerDto) {
     // 1. Verify if the email is already in use
     const existingUser = await this.prisma.user.findUnique({ where: { email: dto.email } });
