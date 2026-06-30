@@ -9,6 +9,7 @@ export interface RegisterDto {
   email?: string;
   phoneNumber: string;
   password: string;
+  role: 'BUYER' | 'SELLER' | 'ADMIN' | 'DELIVERY';
 }
 
 export interface User {
