@@ -13,17 +13,17 @@ export const authService = {
   },
 
   async refresh(dto: RefreshTokenDto): Promise<{ accessToken: string; refreshToken?: string }> {
-    const { data } = await api.post<{ accessToken: string; refreshToken?: string }>('/api/auth/refresh', dto);
+    const { data } = await api.post<{ accessToken: string; refreshToken?: string }>('/auth/refresh', dto);
     return data;
   },
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
-    const { data } = await api.post<{ message: string }>('/api/auth/forgot-password', dto);
+    const { data } = await api.post<{ message: string }>('/auth/forgot-password', dto);
     return data;
   },
 
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
-    const { data } = await api.post<{ message: string }>('/api/auth/reset-password', dto);
+    const { data } = await api.post<{ message: string }>('/auth/reset-password', dto);
     return data;
   },
 };

@@ -5,11 +5,22 @@ import {
   MaxLength,
   IsOptional,
   IsEmail,
+  IsIn,
   Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterSellerDto {
+  @ApiPropertyOptional({
+    example: 'BUYER',
+    enum: ['SELLER', 'BUYER', 'DELIVERY'],
+    description: 'Account role. Defaults to SELLER if not provided.',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['SELLER', 'BUYER', 'DELIVERY'])
+  role?: 'SELLER' | 'BUYER' | 'DELIVERY';
+
   @ApiProperty({ example: 'John' })
   @IsString()
   @IsNotEmpty()

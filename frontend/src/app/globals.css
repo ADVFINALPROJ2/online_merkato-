@@ -20,10 +20,27 @@
   
   /* Secure Badge Green */
   --color-brand-success: #00a86b;
-
   /* Global Layout Variables */
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
+
+:root {
+  --background: #fafaf9;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #f97316;
+  --radius: 0.5rem;
+  --primary: #f97316;
+  --primary-foreground: #ffffff;
+  --primary-glow: #fb923c;
+  --secondary: #f1f5f9;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --destructive: #dc2626;
+
 }
 
 /* Optional base styling resets to keep backgrounds clean */

@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { FolderTree } from 'lucide-react';
+import { FolderTree, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,7 +34,7 @@ interface CategoryFormProps {
 }
 
 export function CategoryForm({ category, onSubmit, isSubmitting }: CategoryFormProps) {
-  const { data: allCategories } = useCategories();
+  const { data: allCategories, isLoading: catLoading, isError: catError } = useCategories();
 
   const {
     register,
@@ -84,22 +84,30 @@ export function CategoryForm({ category, onSubmit, isSubmitting }: CategoryFormP
             </FormField>
 
             <FormField label="Parent Category (optional)">
-              <Select
-                value={selectedParentId || undefined}
-                onValueChange={(val) => setValue('parentId', val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="None (top-level)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None (top-level)</SelectItem>
-                  {availableParents?.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {catError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>Failed to load categories.</span>
+                </div>
+              ) : (
+                <Select
+                  value={selectedParentId || undefined}
+                  onValueChange={(val) => setValue('parentId', val)}
+                  disabled={catLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={catLoading ? 'Loading...' : 'None (top-level)'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None (top-level)</SelectItem>
+                    {availableParents?.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </FormField>
           </div>
 

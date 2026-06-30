@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Package } from 'lucide-react';
+import Link from 'next/link';
+import { Package, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -53,7 +54,7 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ product, onSubmit, isSubmitting }: ProductFormProps) {
-  const { data: categories, isLoading: catLoading } = useCategories();
+  const { data: categories, isLoading: catLoading, isError: catError } = useCategories();
   const [images, setImages] = useState<string[]>(product?.images || []);
 
   const {
@@ -113,21 +114,40 @@ export function ProductForm({ product, onSubmit, isSubmitting }: ProductFormProp
             </FormField>
 
             <FormField label="Category" error={errors.categoryId?.message}>
-              <Select
-                value={watch('categoryId') || undefined}
-                onValueChange={(val) => setValue('categoryId', val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={catLoading ? 'Loading...' : 'Select category'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories?.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {catError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>Failed to load categories. Please try again later.</span>
+                </div>
+              ) : categories && categories.length === 0 ? (
+                <div className="rounded-lg border border-stone-200 bg-stone-50 p-3 text-sm text-stone-500 flex flex-col gap-2">
+                  <span>No categories yet.</span>
+                  <Link
+                    href="/categories/new"
+                    className="inline-flex items-center gap-1 text-amber-600 hover:text-amber-700 font-medium"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Create a category first
+                  </Link>
+                </div>
+              ) : (
+                <Select
+                  value={watch('categoryId') || undefined}
+                  onValueChange={(val) => setValue('categoryId', val)}
+                  disabled={catLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={catLoading ? 'Loading...' : 'Select category'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories?.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </FormField>
           </div>
 
