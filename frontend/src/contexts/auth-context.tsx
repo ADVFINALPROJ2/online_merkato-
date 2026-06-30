@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshToken = useCallback(async (dto: RefreshTokenDto) => {
-    const res = await authService.refreshToken(dto);
+    const res = await authService.refresh(dto);
     localStorage.setItem('token', res.accessToken);
     if (res.refreshToken) {
       localStorage.setItem('refreshToken', res.refreshToken);

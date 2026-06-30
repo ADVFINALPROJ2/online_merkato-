@@ -33,6 +33,13 @@
   --input: #e7e5e4;
   --ring: #f97316;
   --radius: 0.5rem;
+  --primary: #f97316;
+  --primary-foreground: #ffffff;
+  --primary-glow: #fb923c;
+  --secondary: #f1f5f9;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --destructive: #dc2626;
 }
 
 * {

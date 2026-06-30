@@ -47,7 +47,7 @@ api.interceptors.response.use(
           throw new Error('No refresh token available');
         }
 
-        const response = await api.post('/api/auth/refresh', { refreshToken });
+        const response = await api.post('/auth/refresh', { refreshToken });
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
         localStorage.setItem('token', accessToken);
@@ -57,13 +57,14 @@ api.interceptors.response.use(
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('refreshToken');
-        window.location.href = `/login?reason=expired`;
-        return Promise.reject(refreshError);
-      }
+      }  catch (refreshError) {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('refreshToken');
+  document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax';
+  window.location.href = `/login?reason=expired`;
+  return Promise.reject(refreshError);
+}
     }
 
     return Promise.reject(error);

@@ -46,6 +46,8 @@ export class AuthService {
     });
   }
 
+  // Single source of truth for what register/login return.
+  // accessToken (camelCase) + user.firstName/lastName to match frontend AuthResponse type.
   private buildUserResponse(user: { id: string; firstName: string; lastName: string; email: string | null; phoneNumber: string; role: string }) {
     const tokens = this.generateTokens(user);
     return {
@@ -63,32 +65,35 @@ export class AuthService {
   }
 
   async register(dto: RegisterSellerDto) {
-    // 1. Verify if the email is already in use
     const existingUser = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existingUser) {
       throw new ConflictException('Email already registered');
     }
 
-    // 2. Hash the user password securely
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    
-    // 3. Create the user and their associated shop directly matching your exact DTO fields
-    return this.prisma.user.create({
+    const role = dto.role ?? 'SELLER';
+
+    const user = await this.prisma.user.create({
       data: {
-        firstName: dto.firstName,     // <-- Maps directly to your DTO
-        lastName: dto.lastName,       // <-- Maps directly to your DTO
+        firstName: dto.firstName,
+        lastName: dto.lastName,
         email: dto.email,
         password: hashedPassword,
-        phoneNumber: dto.phoneNumber, // <-- Maps directly to your DTO
-        role: 'SELLER',
-        shop: {
-          create: {
-            name: `${dto.firstName}'s Shop`, // Auto-generates a cool fallback name matching the user
-            description: 'Sustainable fashion and custom apparel marketplace vendor profile.',
+        phoneNumber: dto.phoneNumber,
+        role,
+        // Only sellers get an auto-created shop
+        ...(role === 'SELLER' && {
+          shop: {
+            create: {
+              name: `${dto.firstName}'s Shop`,
+              description: 'Sustainable fashion and custom apparel marketplace vendor profile.',
+            },
           },
-        },
+        }),
       },
     });
+
+    return this.buildUserResponse(user);
   }
 
   async login(dto: LoginSellerDto) {
@@ -102,16 +107,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { id: user.id, email: user.email, role: user.role };
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: { 
-        id: user.id, 
-        name: `${user.firstName} ${user.lastName}`.trim(), 
-        email: user.email, 
-        role: user.role 
-      },
-    };
+    return this.buildUserResponse(user);
   }
 
   async refresh(dto: RefreshTokenDto) {
