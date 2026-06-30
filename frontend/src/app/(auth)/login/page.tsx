@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,8 +21,9 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+export default function Login() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -38,6 +39,10 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setServerError('');
     try {
+      await login(data);
+      const redirectTo = searchParams.get('redirect') || '/dashboard';
+      router.push(redirectTo);
+
       const user = await login(data);
       if (user.role === 'BUYER') {
         router.push('/buyer/dashboard');

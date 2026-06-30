@@ -77,7 +77,7 @@ export class PaymentService {
 
     const result = await this.chapa.verify(txRef);
 
-    if (result.status === 'success' && result.data?.status === 'success') {
+    if (result.success) {
       await this.prisma.payment.update({
         where: { id: payment.id },
         data: { status: 'PAID' },

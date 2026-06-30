@@ -3,12 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 
-interface JwtPayload {
-  id: string;    // ◄ Change 'sub' to 'id' to match your login token structure
-  email: string;
-  role: string;
-}
-
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private prisma: PrismaService) {
@@ -19,14 +13,27 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
-  // 🧪 TEMPORARY TEST: Bypass the database lookup completely
-  console.log('Decrypted Token Payload:', payload);
-  
-  return { 
-    id: payload.id || payload.sub, 
-    email: payload.email, 
-    role: payload.role 
-  };
-}
+  async validate(payload: { id: string; email: string; role: string }) {
+    // 1. Fetch user from DB to ensure they still exist
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.id },
+      select: {
+        id: true,
+        email: true,
+        // Add other necessary fields (e.g., isActive, role)
+      },
+    });
+
+    // 2. If user doesn't exist, throw Unauthorized
+    if (!user) {
+      throw new UnauthorizedException('User no longer exists');
+    }
+
+    // 3. Return the user object - this will be attached to request.user
+    return {
+      id: user.id,
+      email: user.email,
+      role: payload.role,
+    };
+  }
 }
