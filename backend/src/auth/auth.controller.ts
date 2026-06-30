@@ -2,7 +2,10 @@ import { Controller, Post, Body, HttpCode, HttpStatus, Get, Headers } from '@nes
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterSellerDto } from './dto/register-seller.dto';
-import { LoginSellerDto } from './dto/login-seller.dto'; // Added this import
+import { LoginSellerDto } from './dto/login-seller.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')

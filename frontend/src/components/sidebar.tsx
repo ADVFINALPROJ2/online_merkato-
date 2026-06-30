@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, Store, Settings, MapPin, Package, FolderTree, ClipboardList } from 'lucide-react';
+import type { ElementType } from 'react';
+import { LayoutDashboard, Store, Settings, MapPin, Package, FolderTree, ClipboardList, ShoppingBag } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 
 const mainLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/orders', label: 'Orders', icon: ShoppingBag },
   { href: '/products', label: 'Products', icon: Package },
   { href: '/categories', label: 'Categories', icon: FolderTree },
   { href: '/inventory', label: 'Inventory', icon: ClipboardList },
@@ -31,7 +33,7 @@ export function Sidebar() {
         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
         pathname === href
           ? 'bg-amber-50 text-amber-700'
-          : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900',
+          : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
       )}
     >
       <Icon className="h-5 w-5" />
