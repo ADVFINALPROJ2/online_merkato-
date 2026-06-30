@@ -41,12 +41,12 @@ enum VerificationStatus {
 
 model User {
   id           String   @id @default(uuid())
+  role  Role   @default(BUYER) 
   firstName    String
   lastName     String
   email        String?  @unique
   phoneNumber  String
   password     String
-  role         Role     @default(SELLER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
