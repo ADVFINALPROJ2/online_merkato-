@@ -30,7 +30,7 @@ const registerSchema = z
 type RegisterForm = z.infer<typeof registerSchema>;
 
 const ROLE_META: Record<string, { label: string; icon: typeof Store; tagline: string; redirectTo: string }> = {
-  BUYER: { label: 'buyer', icon: ShoppingBag, tagline: 'Start shopping on Digital Merkato', redirectTo: '/' },
+  BUYER: { label: 'buyer', icon: ShoppingBag, tagline: 'Start shopping on Digital Merkato', redirectTo: '/buyer/dashboard' },
   SELLER: { label: 'seller', icon: Store, tagline: 'Start selling on Digital Merkato', redirectTo: '/dashboard' },
   DELIVERY: { label: 'delivery partner', icon: Truck, tagline: 'Start accepting deliveries', redirectTo: '/deliveries' },
 };

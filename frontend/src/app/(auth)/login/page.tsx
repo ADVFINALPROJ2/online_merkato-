@@ -38,8 +38,16 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setServerError('');
     try {
-      await login(data);
-      router.push('/dashboard');
+      const user = await login(data);
+      if (user.role === 'BUYER') {
+        router.push('/buyer/dashboard');
+      } else if (user.role === 'SELLER') {
+        router.push('/dashboard');
+      } else if (user.role === 'DELIVERY') {
+        router.push('/deliveries');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       if (err instanceof AxiosError) {
         setServerError(err.response?.data?.message || 'Invalid credentials');

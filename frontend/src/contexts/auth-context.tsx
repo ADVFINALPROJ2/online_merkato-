@@ -14,8 +14,8 @@ function removeCookie(name: string) {
 }
 
 export interface AuthContextType extends AuthState {
-  login: (dto: LoginDto) => Promise<void>;
-  register: (dto: RegisterDto) => Promise<void>;
+  login: (dto: LoginDto) => Promise<User>;
+  register: (dto: RegisterDto) => Promise<User>;
   refreshToken: (dto: RefreshTokenDto) => Promise<void>;
   forgotPassword: (dto: ForgotPasswordDto) => Promise<void>;
   resetPassword: (dto: ResetPasswordDto) => Promise<void>;
@@ -58,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('refreshToken', res.refreshToken || '');
     setCookie('token', res.accessToken);
     setState({ user: res.user, token: res.accessToken, isAuthenticated: true, isLoading: false });
+    return res.user;
   }, []);
 
   const register = useCallback(async (dto: RegisterDto) => {
@@ -69,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setCookie('token', res.accessToken);
     setState({ user: res.user, token: res.accessToken, isAuthenticated: true, isLoading: false });
+    return res.user;
   }, []);
 
   const refreshToken = useCallback(async (dto: RefreshTokenDto) => {

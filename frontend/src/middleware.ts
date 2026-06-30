@@ -1,8 +1,26 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const protectedRoutes = ['/dashboard', '/dashboard/:path*', '/shop/:path*', '/products/:path*'];
+const protectedRoutes = ['/dashboard', '/dashboard/:path*', '/shop/:path*', '/products/:path*', '/buyer', '/buyer/:path*'];
 const authRoutes = ['/login', '/register', '/forgot-password'];
+
+function getRoleFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.role || null;
+  } catch {
+    return null;
+  }
+}
+
+function getDashboardByRole(role: string | null): string {
+  switch (role) {
+    case 'BUYER': return '/buyer/dashboard';
+    case 'SELLER': return '/dashboard';
+    case 'DELIVERY': return '/deliveries';
+    default: return '/dashboard';
+  }
+}
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
@@ -24,7 +42,8 @@ export function middleware(request: NextRequest) {
   }
 
   if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const role = getRoleFromToken(token);
+    return NextResponse.redirect(new URL(getDashboardByRole(role), request.url));
   }
 
   return NextResponse.next();
