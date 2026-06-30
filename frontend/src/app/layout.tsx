@@ -1,4 +1,10 @@
+import { I18nProvider } from '@/services/i18n-context';
 import './globals.css';
+
+export const metadata = {
+  title: 'Digital Merkato',
+  description: 'Ethiopia online marketplace',
+}
 
 import { Providers } from '@/components/providers';
 import { Navbar } from '@/components/navbar';

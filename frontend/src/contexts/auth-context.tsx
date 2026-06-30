@@ -61,13 +61,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (dto: LoginDto): Promise<User> => {
   const res = await authService.login(dto);
-  // ... existing storage logic ...
-  
+
+  localStorage.setItem('token', res.accessToken);
+  localStorage.setItem('user', JSON.stringify(res.user));
+  setCookie('token', res.accessToken);
+
   setState({ user: res.user, token: res.accessToken, isAuthenticated: true, isLoading: false });
   
   // Dynamic redirect based on role
   if (res.user.role === 'SELLER') {
     window.location.href = '/seller';
+  } else if (res.user.role === 'ADMIN') {
+    window.location.href = '/admin';
+  } else if (res.user.role === 'DELIVERY') {
+    window.location.href = '/delivery';
   } else {
     window.location.href = '/buyer';
   }
@@ -109,11 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false 
       });
 
-      window.location.href = '/login';
+      window.location.href = '/';
     }
   }, []);
-
-  
 
   return (
     <AuthContext.Provider value={{ ...state, login, register, logout }}>

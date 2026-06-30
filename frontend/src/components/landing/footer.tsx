@@ -9,7 +9,7 @@ export const Footer = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-gray-900">Digital Merkato</h2>
           <p className="text-gray-600 leading-relaxed">
-            Bringing Ethiopia's iconic marketplaces online — buy, sell, and deliver with ease.
+            Bringing Ethiopia's iconic marketplaces online buy, sell, and deliver with ease.
           </p>
         </div>
 
@@ -20,16 +20,6 @@ export const Footer = () => {
             <li><a href="/products" className="hover:text-blue-600">All products</a></li>
             <li><a href="/cart" className="hover:text-blue-600">Cart</a></li>
             <li><a href="/orders" className="hover:text-blue-600">My orders</a></li>
-          </ul>
-        </div>
-
-        {/* Company Column */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-gray-900">Company</h3>
-          <ul className="space-y-2 text-gray-600">
-            <li><a href="/about" className="hover:text-blue-600">About</a></li>
-            <li><a href="/careers" className="hover:text-blue-600">Careers</a></li>
-            <li><a href="/press" className="hover:text-blue-600">Press</a></li>
           </ul>
         </div>
 

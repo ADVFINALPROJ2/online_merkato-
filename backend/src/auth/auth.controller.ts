@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Headers } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -18,12 +18,9 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Validation failed' })
 
   async register(@Body() dto: RegisterDto) {
-  const user = await this.authService.register(dto);
+  const result = await this.authService.register(dto);
 
-  return { 
-    user: user,
-    accessToken: "..." 
-  }; 
+  return result;
 }
 
 
@@ -36,5 +33,28 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Validation failed' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+
+
+
+
+  @Get('validate-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Validate access token (optional utility)' })
+  validateToken(@Headers('authorization') authHeader?: string) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return { valid: false };
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+      const payload = this.authService['jwtService'].verify(token, {
+        secret: process.env.JWT_SECRET || 'secret',
+      });
+      return { valid: true, payload };
+    } catch {
+      return { valid: false };
+    }
   }
 }

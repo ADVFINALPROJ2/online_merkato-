@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
-import { CraftService } from './cart.service';       // Imports the class name actually in your file
-import { CraftController } from './cart.controller'; // Imports the class name actually in your file
-import { PrismaModule } from '../prisma/prisma.module';
+import { CartController } from './cart.controller';
+import { CartService } from './cart.service';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [CraftController],
-  providers: [CraftService],
-  exports: [CraftService],
+  controllers: [CartController],
+  providers: [CartService],
+  exports: [CartService],
 })
 export class CartModule {}

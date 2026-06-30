@@ -39,24 +39,34 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+  DRAFT
+}
+
 model User {
-  id           String   @id @default(uuid())
-  role  Role   @default(BUYER) 
-  firstName    String
-  lastName     String
-  email        String?  @unique
-  phoneNumber  String
-  password     String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String?  @unique
+  phoneNumber String
+  password    String
+  role        Role     @default(SELLER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   shop            Shop?
+  cart            Cart?
   ordersAsBuyer   Order[]        @relation("BuyerOrders")
   reviewsGiven    Review[]       @relation("BuyerReviews")
   reviewsReceived Review[]       @relation("SellerReviews")
   deliveries      Delivery[]
   notifications   Notification[]
   craftRequests   CraftRequest[]  @relation("BuyerCrafts")
+  refreshTokens   RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Shop {
@@ -68,28 +78,28 @@ model Shop {
   contactPhone       String?
   businessType       String?
   verificationStatus VerificationStatus @default(PENDING)
-  sellerId           String   @unique
-  seller             User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId           String             @unique
+  seller             User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   location           ShopLocation?
   products           Product[]
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 }
 
 model ShopLocation {
-  id         String   @id @default(uuid())
-  shopId     String   @unique
-  shop       Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  region     String
-  city       String
-  subCity    String
-  woreda     String
-  terra      String
-  latitude   Float
-  longitude  Float
-  landmark   String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(uuid())
+  shopId    String   @unique
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  region    String
+  city      String
+  subCity   String
+  woreda    String
+  terra     String
+  latitude  Float
+  longitude Float
+  landmark  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CraftRequest {
@@ -105,14 +115,14 @@ model CraftRequest {
 }
 
 model Category {
-  id          String      @id @default(uuid())
-  name        String      @unique
+  id          String     @id @default(uuid())
+  name        String     @unique
   description String?
   parentId    String?
-  parent      Category?   @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children    Category[]  @relation("CategoryHierarchy")
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  parent      Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryChildren")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   products    Product[]
 }
 
@@ -123,6 +133,7 @@ model Product {
   price       Float
   quantity    Int           @default(0)
   status      ProductStatus @default(ACTIVE)
+  isActive    Boolean       @default(true)
   images      String[]
   imageUrl    String?
   shopId      String
@@ -131,8 +142,33 @@ model Product {
   category    Category?     @relation(fields: [categoryId], references: [id])
   orderItems  OrderItem[]
   reviews     Review[]
+  cartItems   CartItem[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+ model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
 }
 
 model Order {
@@ -208,9 +244,20 @@ model Notification {
   createdAt DateTime @default(now())
 }
 
-enum ProductStatus {
-  ACTIVE
-  INACTIVE
-  OUT_OF_STOCK
-  DRAFT
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

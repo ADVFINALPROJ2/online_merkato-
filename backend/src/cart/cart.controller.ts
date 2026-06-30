@@ -1,51 +1,58 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { CraftService } from '././cart.service';
-import { CreateCraftDto } from '././dto/create-craft.dto';
-import { UpdateCraftDto } from '././dto/update-craft.dto';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
-import { Role } from '@prisma/client';
+import { CartService } from './cart.service';
+import { AddToCartDto } from './dto/add-to-cart.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
-@ApiTags('Craft Requests')
-@Controller('craft')
-export class CraftController {
-  constructor(private readonly craftService: CraftService) {}
-
-  @Post()
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.BUYER) // Enforces that only BUYERS can request custom crafts
-  @ApiOperation({ summary: 'Submit a new custom craft request (Buyers Only)' })
-  create(@Body() createCraftDto: CreateCraftDto, @Req() req: any) {
-    const buyerId = req.user.id || req.user.sub;
-    return this.craftService.create(createCraftDto, buyerId);
-  }
+@ApiTags('Cart')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('cart')
+export class CartController {
+  constructor(private readonly cartService: CartService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all user custom craft requests (Public/Sellers View)' })
-  findAll() {
-    return this.craftService.findAll();
+  @ApiOperation({ summary: '#26 View cart summary + #27 total price' })
+  getCart(@CurrentUser() user: any) {
+    return this.cartService.getCart(user.id);
   }
 
-  @Patch(':id')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.BUYER)
-  @ApiOperation({ summary: 'Update an owned craft request (Owner Only)' })
-  update(@Param('id') id: string, @Body() updateCraftDto: UpdateCraftDto, @Req() req: any) {
-    const buyerId = req.user.id || req.user.sub;
-    return this.craftService.update(id, updateCraftDto, buyerId);
+  @Post('items')
+  @ApiOperation({ summary: '#23 Add item to cart' })
+  addItem(@CurrentUser() user: any, @Body() dto: AddToCartDto) {
+    return this.cartService.addItem(user.id, dto);
   }
 
-  @Delete(':id')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.BUYER)
-  @ApiOperation({ summary: 'Cancel/Delete an owned craft request (Owner Only)' })
-  remove(@Param('id') id: string, @Req() req: any) {
-    const buyerId = req.user.id || req.user.sub;
-    return this.craftService.remove(id, buyerId);
+  @Patch('items/:itemId')
+  @ApiOperation({ summary: '#25 Update item quantity' })
+  updateItem(
+    @CurrentUser() user: any,
+    @Param('itemId') itemId: string,
+    @Body() dto: UpdateCartItemDto,
+  ) {
+    return this.cartService.updateItem(user.id, itemId, dto);
+  }
+
+  @Delete('items/:itemId')
+  @ApiOperation({ summary: '#24 Remove item from cart' })
+  removeItem(@CurrentUser() user: any, @Param('itemId') itemId: string) {
+    return this.cartService.removeItem(user.id, itemId);
+  }
+
+  @Delete()
+  @ApiOperation({ summary: 'Clear entire cart (used after checkout)' })
+  clearCart(@CurrentUser() user: any) {
+    return this.cartService.clearCart(user.id);
   }
 }

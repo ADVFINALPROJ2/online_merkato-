@@ -50,9 +50,23 @@ export class AuthService {
     }
 
     // 6. Create the user
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: userData,
     });
+
+    // 7. Generate JWT token
+    const payload = { id: user.id, email: user.email, role: user.role };
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      accessToken,
+      user: {
+        id: user.id,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
 
   async login(dto: LoginDto) {
@@ -68,7 +82,7 @@ export class AuthService {
 
     const payload = { id: user.id, email: user.email, role: user.role };
     return {
-      access_token: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload),
       user: { 
         id: user.id, 
         name: `${user.firstName} ${user.lastName}`.trim(), 

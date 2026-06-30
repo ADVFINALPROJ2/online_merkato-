@@ -1,0 +1,90 @@
+{
+  "common": {
+    "success": "ተሳክቷል",
+    "error": "ችግር ተፈጥሯል",
+    "notFound": "አልተገኘም",
+    "unauthorized": "ፈቃድ የለዎትም",
+    "forbidden": "የተከለከለ",
+    "loading": "በመጫን ላይ...",
+    "save": "አስቀምጥ",
+    "cancel": "ሰርዝ",
+    "delete": "ሰርዝ",
+    "edit": "አርትዕ",
+    "search": "ፈልግ",
+    "filter": "አጣራ",
+    "sort": "ደርድር",
+    "back": "ተመለስ",
+    "next": "ቀጣይ",
+    "confirm": "አረጋግጥ"
+  },
+  "auth": {
+    "login": "ግባ",
+    "logout": "ውጣ",
+    "register": "ተመዝገብ",
+    "email": "ኢሜይል",
+    "password": "የምስጢር ቃል",
+    "firstName": "ስም",
+    "lastName": "የአባት ስም",
+    "phoneNumber": "ስልክ ቁጥር",
+    "loginSuccess": "በተሳካ ሁኔታ ገብተዋል",
+    "logoutSuccess": "በተሳካ ሁኔታ ወጥተዋል",
+    "registerSuccess": "ምዝገባ ተሳክቷል",
+    "invalidCredentials": "ኢሜይል ወይም የምስጢር ቃል ትክክል አይደለም"
+  },
+  "product": {
+    "title": "ምርቶች",
+    "search": "ምርቶችን ፈልግ",
+    "notFound": "ምርቱ አልተገኘም",
+    "price": "ዋጋ",
+    "quantity": "መጠን",
+    "category": "ምድብ",
+    "description": "መግለጫ",
+    "addToCart": "ወደ ጋሪ ጨምር",
+    "outOfStock": "አቅርቦት አልቋል",
+    "inStock": "አቅርቦት አለ",
+    "relatedProducts": "ተዛማጅ ምርቶች",
+    "trending": "ተወዳጅ ምርቶች"
+  },
+  "cart": {
+    "title": "የግዢ ጋሪ",
+    "empty": "ጋሪዎ ባዶ ነው",
+    "total": "ጠቅላላ",
+    "subtotal": "ንዑስ ጠቅላላ",
+    "checkout": "ወደ ክፍያ ቀጥል",
+    "remove": "አስወግድ",
+    "quantity": "መጠን",
+    "continueShopping": "ግዢ ቀጥል",
+    "itemAdded": "ዕቃ ወደ ጋሪ ተጨምሯል",
+    "itemRemoved": "ዕቃ ከጋሪ ተወግዷል",
+    "unavailable": "ይህ ዕቃ አሁን አይገኝም"
+  },
+  "order": {
+    "title": "ትዕዛዞች",
+    "place": "ትዕዛዝ ስጥ",
+    "status": "የትዕዛዝ ሁኔታ",
+    "pending": "በጥበቃ ላይ",
+    "confirmed": "ተረጋግጧል",
+    "shipped": "ተላልፏል",
+    "delivered": "ደርሷል",
+    "cancelled": "ተሰርዟል",
+    "deliveryAddress": "የመላኪያ አድራሻ",
+    "orderPlaced": "ትዕዛዝ በተሳካ ሁኔታ ቀርቧል",
+    "trackOrder": "ትዕዛዝ ክትትል"
+  },
+  "shop": {
+    "title": "መደብር",
+    "visit": "መደብሩን ጎብኝ",
+    "products": "ምርቶች",
+    "location": "አካባቢ",
+    "contact": "አግኙን",
+    "seller": "ሻጭ"
+  },
+  "nav": {
+    "home": "ዋና ገጽ",
+    "products": "ምርቶች",
+    "cart": "ጋሪ",
+    "orders": "ትዕዛዞች",
+    "profile": "መገለጫ",
+    "settings": "ቅንብሮች"
+  }
+}

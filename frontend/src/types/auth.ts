@@ -12,6 +12,19 @@ export interface RegisterDto {
   role: 'BUYER' | 'SELLER' | 'ADMIN' | 'DELIVERY';
 }
 
+export interface ForgotPasswordDto {
+  email: string;
+}
+
+export interface ResetPasswordDto {
+  token: string;
+  password: string;
+}
+
+export interface RefreshTokenDto {
+  refreshToken: string;
+}
+
 export interface User {
   id: string;
   firstName: string;
@@ -25,6 +38,7 @@ export interface AuthResponse {
   message: string;
   accessToken: string;
   user: User;
+  refreshToken?: string;
 }
 
 export interface AuthState {

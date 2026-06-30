@@ -1,49 +1,153 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateCraftDto } from './dto/create-craft.dto';
-import { UpdateCraftDto } from './dto/update-craft.dto';
+import { AddToCartDto } from './dto/add-to-cart.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Injectable()
-export class CraftService {
-  constructor(private prisma: PrismaService) {}
+export class CartService {
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateCraftDto, buyerId: string) {
-    return this.prisma.craftRequest.create({
-      data: {
-        ...dto,
-        buyerId,
+  private async getOrCreateCart(userId: string) {
+    let cart = await this.prisma.cart.findUnique({ where: { userId } });
+    if (!cart) {
+      cart = await this.prisma.cart.create({ data: { userId } });
+    }
+    return cart;
+  }
+
+  async getCart(userId: string) {
+    const cart = await this.getOrCreateCart(userId);
+
+    const items = await this.prisma.cartItem.findMany({
+      where: { cartId: cart.id },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            isActive: true,
+            images: true,
+            shop: { select: { id: true, name: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return this.buildCartSummary(items);
+  }
+
+  async addItem(userId: string, dto: AddToCartDto) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: dto.productId },
+    });
+
+    if (!product || !product.isActive) {
+      throw new NotFoundException('Product not found or unavailable');
+    }
+
+    const cart = await this.getOrCreateCart(userId);
+
+    const existingItem = await this.prisma.cartItem.findUnique({
+      where: {
+        cartId_productId: { cartId: cart.id, productId: dto.productId },
       },
     });
+
+    if (existingItem) {
+      await this.prisma.cartItem.update({
+        where: { id: existingItem.id },
+        data: { quantity: existingItem.quantity + dto.quantity },
+      });
+    } else {
+      await this.prisma.cartItem.create({
+        data: {
+          cartId: cart.id,
+          productId: dto.productId,
+          quantity: dto.quantity,
+        },
+      });
+    }
+
+    return this.getCart(userId);
   }
 
-  async findAll() {
-    return this.prisma.craftRequest.findMany({
-      include: { buyer: { select: { firstName: true, lastName: true, email: true } } },
+  async updateItem(userId: string, itemId: string, dto: UpdateCartItemDto) {
+    const cart = await this.getOrCreateCart(userId);
+
+    const item = await this.prisma.cartItem.findFirst({
+      where: { id: itemId, cartId: cart.id },
     });
+
+    if (!item) throw new NotFoundException('Cart item not found');
+
+    await this.prisma.cartItem.update({
+      where: { id: itemId },
+      data: { quantity: dto.quantity },
+    });
+
+    return this.getCart(userId);
   }
 
-  async findOne(id: string) {
-    const request = await this.prisma.craftRequest.findUnique({ where: { id } });
-    if (!request) {
-      throw new NotFoundException(`Craft request with ID ${id} not found`);
-    }
-    return request;
+  async removeItem(userId: string, itemId: string) {
+    const cart = await this.getOrCreateCart(userId);
+
+    const item = await this.prisma.cartItem.findFirst({
+      where: { id: itemId, cartId: cart.id },
+    });
+
+    if (!item) throw new NotFoundException('Cart item not found');
+
+    await this.prisma.cartItem.delete({ where: { id: itemId } });
+
+    return this.getCart(userId);
   }
 
-  async update(id: string, dto: UpdateCraftDto, buyerId: string) {
-    const request = await this.findOne(id);
-    if (request.buyerId !== buyerId) {
-      throw new ForbiddenException('Access Denied: You can only edit your own craft requests');
-    }
-    return this.prisma.craftRequest.update({ where: { id }, data: dto });
+  async clearCart(userId: string) {
+    const cart = await this.getOrCreateCart(userId);
+    await this.prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+    return this.getCart(userId);
   }
 
-  async remove(id: string, buyerId: string) {
-    const request = await this.findOne(id);
-    if (request.buyerId !== buyerId) {
-      throw new ForbiddenException('Access Denied: You can only delete your own craft requests');
-    }
-    await this.prisma.craftRequest.delete({ where: { id } });
-    return { message: 'Craft request cancelled successfully' };
+  private buildCartSummary(items: any[]) {
+    let total = 0;
+    let itemCount = 0;
+    const unavailableItems: string[] = [];
+
+    const formattedItems = items.map((item) => {
+      const isAvailable = item.product.isActive;
+      const subtotal = isAvailable ? item.product.price * item.quantity : 0;
+
+      if (!isAvailable) {
+        unavailableItems.push(item.id);
+      } else {
+        total += subtotal;
+        itemCount += item.quantity;
+      }
+
+      return {
+        id: item.id,
+        productId: item.productId,
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        subtotal,
+        isAvailable,
+        image: item.product.images?.[0] ?? null,
+        shop: item.product.shop,
+      };
+    });
+
+    return {
+      items: formattedItems,
+      itemCount,
+      total,
+      hasUnavailableItems: unavailableItems.length > 0,
+      unavailableItemIds: unavailableItems,
+    };
   }
 }

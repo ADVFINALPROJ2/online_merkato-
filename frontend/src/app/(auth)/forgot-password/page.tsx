@@ -1,15 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Store, Mail, ArrowLeft } from 'lucide-react';
+import { Store, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { FormField } from '@/components/ui/form-field';
+import { authService } from '@/services/auth-service';
+import { toast } from 'sonner';
+import { AxiosError } from 'axios';
 
 const forgotSchema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -19,6 +23,7 @@ type ForgotForm = z.infer<typeof forgotSchema>;
 
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -28,9 +33,17 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(forgotSchema),
   });
 
-  const onSubmit = async (_data: ForgotForm) => {
-    // TODO: Call auth service for password reset
-    setSent(true);
+  const onSubmit = async (data: ForgotForm) => {
+    try {
+      await authService.forgotPassword(data);
+      setSent(true);
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        toast.error(err.response?.data?.message || 'Failed to send reset link');
+      } else {
+        toast.error('Something went wrong. Please try again.');
+      }
+    }
   };
 
   if (sent) {
