@@ -100,6 +100,15 @@ export class ProductService {
       throw new ForbiddenException('You can only update your own products');
     }
 
+    if (dto.categoryId !== undefined) {
+      const category = await this.prisma.category.findUnique({
+        where: { id: dto.categoryId },
+      });
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
+    }
+
     return this.prisma.product.update({
       where: { id },
       data: {
