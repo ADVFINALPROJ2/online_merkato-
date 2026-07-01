@@ -8,7 +8,7 @@ export const authService = {
   },
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>('/auth/register', dto);
+    const { data } = await api.post<AuthResponse>('/auth/register/driver', dto);
     return data;
   },
 };

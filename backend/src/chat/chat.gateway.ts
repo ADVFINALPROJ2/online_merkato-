@@ -16,7 +16,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  async handleMessage(client: Socket, data: { id: string; text: string; sender: string }) {
+  async handleMessage(client: Socket, data: { orderId: string; senderId: string; receiverId: string; body: string }) {
     const message = await this.chatService.createMessage(data);
     client.broadcast.emit('message', message);
   }

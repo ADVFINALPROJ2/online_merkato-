@@ -6,40 +6,52 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class DriverService {
-  constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async register(dto: RegisterDriverDto) {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
-
     if (existingUser) {
       throw new BadRequestException('Email is already registered');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    // Build user payload defensively based on your exact schema properties
-    const userData: any = {
-      email: dto.email,
-      password: hashedPassword,
-    };
+    return this.prisma.$transaction(async (tx) => {
+      const nameParts = dto.fullName.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
 
-    // Safely assign whichever name property your specific schema uses
-    if ('fullName' in (this.prisma.user as any).fields) {
-      userData.fullName = dto.fullName;
-    } else {
-      userData.name = dto.fullName;
-    }
+      const user = await tx.user.create({
+        data: {
+          firstName,
+          lastName,
+          email: dto.email,
+          phoneNumber: dto.phoneNumber,
+          password: hashedPassword,
+          role: 'DRIVER',
+        },
+      });
 
-    const user = await this.prisma.user.create({
-      data: userData,
+      await tx.driverProfile.create({
+        data: {
+          userId: user.id,
+          vehicleType: dto.vehicleType as any,
+          licensePlate: dto.licensePlate,
+          idImageUrl: dto.idImageUrl,
+          licenseImageUrl: dto.licenseImageUrl,
+        },
+      });
+
+      return {
+        message: 'Driver registration submitted successfully.',
+        userId: user.id,
+      };
     });
-
-    return {
-      message: 'Driver registration submitted successfully.',
-      userId: user.id,
-    };
   }
 
   async login(email: string, password: string) {
@@ -48,9 +60,10 @@ export class DriverService {
       throw new BadRequestException('Invalid credentials');
     }
 
-    const payload = { userId: user.id };
+    const payload = { sub: user.id, email: user.email, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
+      user: { id: user.id, email: user.email, role: user.role },
     };
   }
 }

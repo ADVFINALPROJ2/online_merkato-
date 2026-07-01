@@ -4,7 +4,7 @@ export const DELIVERY_STATUSES = [
   'ASSIGNED',
   'ACCEPTED',
   'PICKED_UP',
-  'IN_TRANSIT',
+  'OUT_FOR_DELIVERY',
   'COMPLETED',
 ] as const;
 
