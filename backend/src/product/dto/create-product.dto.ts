@@ -8,24 +8,24 @@ export class CreateProductDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(200)
-  name!: string; // <-- Added ! here
+  name!: string; 
 
   @ApiProperty({ example: 'Beautiful traditional dress made with pure organic cotton' })
   @IsString()
   @IsNotEmpty()
   @MinLength(10)
   @MaxLength(5000)
-  description!: string; // <-- Added ! here
+  description!: string; 
 
   @ApiProperty({ example: 4500.00 })
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  price!: number; // <-- Added ! here
+  price!: number; 
 
   @ApiProperty({ example: 5 })
   @IsInt()
   @Min(0)
-  quantity!: number; // <-- Added ! here
+  quantity!: number; 
 
   @ApiPropertyOptional({ example: ProductStatus.ACTIVE, enum: ProductStatus })
   @IsOptional()
@@ -41,5 +41,5 @@ export class CreateProductDto {
   @ApiProperty({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', description: 'The UUID of the assigned Category' })
   @IsUUID()
   @IsNotEmpty()
-  categoryId!: string; // <-- Added ! here
+  categoryId!: string; 
 }

@@ -1,39 +1,28 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private prisma: PrismaService) {
+  constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'secret',
+      // Ensure your .env has the SAME secret used in AuthModule
+      secretOrKey: process.env.JWT_SECRET || 'OnlineMerkatoSuperSecretKey2026', 
     });
   }
 
-  async validate(payload: { id: string; email: string; role: string }) {
-    // 1. Fetch user from DB to ensure they still exist
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.id },
-      select: {
-        id: true,
-        email: true,
-        // Add other necessary fields (e.g., isActive, role)
-      },
-    });
-
-    // 2. If user doesn't exist, throw Unauthorized
-    if (!user) {
-      throw new UnauthorizedException('User no longer exists');
-    }
-
-    // 3. Return the user object - this will be attached to request.user
-    return {
-      id: user.id,
-      email: user.email,
-      role: payload.role,
+  // The payload here is what comes OUT of the decrypted JWT
+  async validate(payload: any) {
+    // Debugging: View exactly what the server sees
+    console.log("JWT Payload received:", payload);
+    
+    // We return this object, and NestJS attaches it to the request as 'req.user'
+    return { 
+      id: payload.id, 
+      email: payload.email, 
+      role: payload.role 
     };
   }
 }

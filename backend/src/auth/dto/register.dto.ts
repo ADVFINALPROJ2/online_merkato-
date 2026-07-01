@@ -5,22 +5,13 @@ import {
   MaxLength,
   IsOptional,
   IsEmail,
-  IsIn,
+  IsEnum,
   Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Role } from '@prisma/client'; 
 
-export class RegisterSellerDto {
-  @ApiPropertyOptional({
-    example: 'BUYER',
-    enum: ['SELLER', 'BUYER', 'DELIVERY'],
-    description: 'Account role. Defaults to SELLER if not provided.',
-  })
-  @IsOptional()
-  @IsString()
-  @IsIn(['SELLER', 'BUYER', 'DELIVERY'])
-  role?: 'SELLER' | 'BUYER' | 'DELIVERY';
-
+export class RegisterDto {
   @ApiProperty({ example: 'John' })
   @IsString()
   @IsNotEmpty()
@@ -38,16 +29,19 @@ export class RegisterSellerDto {
   @ApiPropertyOptional({ example: 'john.doe@example.com' })
   @IsOptional()
   @IsEmail()
-  @IsNotEmpty()
-  email!: string;
+  email?: string; // Optional email
 
-  @ApiProperty({ example: '+251911234567' })
+  @ApiProperty({ example: '0911234567' })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^\+?[1-9]\d{6,14}$/, {
-    message: 'phoneNumber must be a valid phone number',
+  @Matches(/^(\+2519|09)\d{8}$/, {
+    message: 'phoneNumber must be in format +2519XXXXXXXX or 09XXXXXXXX',
   })
   phoneNumber!: string;
+
+  @ApiProperty({ example: 'BUYER', enum: Role, description: 'Role must be BUYER, SELLER, or DELIVERY' })
+  @IsEnum(Role)
+  role: Role = Role.BUYER; // Defaults to BUYER
 
   @ApiProperty({ example: 'SecurePass123!' })
   @IsString()

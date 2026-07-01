@@ -1,27 +1,14 @@
-﻿'use client';
+﻿import { HeroSection } from '@/components/landing/hero_section';
+import { CategoryGrid } from '@/components/landing/category-grid';
+import { ProductListing } from '@/components/landing/product-listing';
+import { Footer } from '@/components/landing/footer';
 
-import { useAuth } from '@/hooks/use-auth';
-import Link from 'next/link';
-
-export default function Home() {
-  const { user, isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div className="p-8 text-center">Loading...</div>;
-  }
-
+export default function LandingPage() {
   return (
-    <div className="p-8 text-center space-y-4">
-      <h1 className="text-2xl font-bold">Welcome to Digital Merkato</h1>
-      {isAuthenticated ? (
-        <p>Hi {user?.firstName}, start shopping!</p>
-      ) : (
-        <p>
-          <Link href="/login" className="text-amber-600 underline">Sign in</Link>{' '}
-          or{' '}
-          <Link href="/register?role=BUYER" className="text-amber-600 underline">create a buyer account</Link>
-        </p>
-      )}
-    </div>
+    <main className="max-w-10xl mx-auto px-4 space-y-12">
+      <HeroSection />
+      <CategoryGrid />
+      <ProductListing />
+    </main>
   );
 }

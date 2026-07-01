@@ -9,7 +9,11 @@ export interface RegisterDto {
   email?: string;
   phoneNumber: string;
   password: string;
+<<<<<<< HEAD
   role?: string;
+=======
+  role: 'BUYER' | 'SELLER' | 'ADMIN' | 'DELIVERY';
+>>>>>>> fyorina
 }
 
 export interface ForgotPasswordDto {

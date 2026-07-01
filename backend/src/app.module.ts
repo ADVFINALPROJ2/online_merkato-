@@ -8,10 +8,12 @@ import { ReviewModule } from './review/review.module';
 import { PaymentModule } from './payment/payment.module';
 import { NotificationModule } from './notification/notification.module';
 import { ProductModule } from './product/product.module';
+import { UserModule } from './user/user.module';
 import { CategoryModule } from './category/category.module';
 import { BuyerModule } from './buyer/buyer.module';
 import { CartModule } from './cart/cart.module';
 import { I18nModule } from './i18n/i18n.module';
+import { AdminModule } from './user/admin.module';
 
 @Module({
   imports: [
@@ -24,10 +26,12 @@ import { I18nModule } from './i18n/i18n.module';
     PaymentModule,
     NotificationModule,
     ProductModule,
+    UserModule,
     CategoryModule,
     BuyerModule,
     CartModule,
     I18nModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

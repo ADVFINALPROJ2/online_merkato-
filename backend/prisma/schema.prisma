@@ -157,8 +157,7 @@ model Cart {
 
   @@map("carts")
 }
-
-model CartItem {
+ model CartItem {
   id        String   @id @default(uuid())
   cartId    String
   cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)

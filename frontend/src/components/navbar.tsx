@@ -1,136 +1,101 @@
 'use client';
 
-import Link from 'next/link';
-import { Store, LogOut, User, ChevronDown, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect, FormEvent } from 'react';
+import { Search, ShoppingCart, Package, LogIn, UserCircle, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { cn } from '@/lib/utils';
 
-export function Navbar() {
+export const Navbar = () => {
+  const router = useRouter();
   const { isAuthenticated, user, logout } = useAuth();
-  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const initials = user
-    ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase()
-    : '';
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault();
+    const q = search.trim();
+    if (q) router.push(`/buyer?q=${encodeURIComponent(q)}`);
+  };
+
+  const handleLogout = () => {
+    setMenuOpen(false);
+    logout();
+    router.push('/');
+  };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-stone-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold text-amber-700">
-          <Store className="h-6 w-6" />
-          <span>Merkato</span>
-        </Link>
+    <nav className="w-full border-b bg-white sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-8">
+        <Link href="/" className="text-2xl font-bold text-blue-600">Digital Merkato</Link>
 
-        <nav className="hidden items-center gap-4 md:flex">
-          {isAuthenticated ? (
-            <>
-              <Link
-                href="/dashboard"
-                className="text-sm font-medium text-stone-600 hover:text-amber-700 transition-colors"
-              >
-                Dashboard
-              </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-stone-100 transition-colors">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="text-xs bg-amber-100 text-amber-700">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden text-sm font-medium text-stone-700 lg:inline">
-                      {user?.firstName}
-                    </span>
-                    <ChevronDown className="h-4 w-4 text-stone-400" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col">
-                      <span>{user?.firstName} {user?.lastName}</span>
-                      <span className="text-xs font-normal text-stone-500">{user?.email || user?.phoneNumber}</span>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="cursor-pointer">
-                      <User className="h-4 w-4" />
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 focus:text-red-600">
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+        <form onSubmit={handleSearch} className="flex-1 flex items-center bg-gray-50 border rounded-full overflow-hidden focus-within:ring-2 ring-blue-500">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search products..."
+            className="w-full px-4 py-2.5 bg-transparent outline-none"
+          />
+          <button type="submit" className="bg-blue-600 text-white p-3 hover:bg-blue-700">
+            <Search className="w-5 h-5" />
+          </button>
+        </form>
+
+        <div className="flex items-center gap-6 text-gray-600">
+          <button className="flex items-center gap-2 hover:text-blue-600">
+            <Package className="w-5 h-5" /> Orders
+          </button>
+          
+          <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-blue-600" />
+          
+          {!isAuthenticated ? (
+            <Link href="/login">
+              <Button className="rounded-full gap-2 bg-blue-600 hover:bg-blue-700">
+                <LogIn className="w-4 h-4" /> Signin 
+              </Button>
+            </Link>
           ) : (
-            <>
-              <Link href="/login">
-                <Button variant="ghost" size="sm">Login</Button>
-              </Link>
-              <Link href="/register">
-                <Button size="sm">Register</Button>
-              </Link>
-            </>
-          )}
-        </nav>
-
-        <button
-          onClick={() => setOpen(!open)}
-          className="flex items-center md:hidden"
-          aria-label="Toggle menu"
-        >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
-
-      <div className={cn(
-        'md:hidden border-t border-stone-200 bg-white px-4 pb-4 pt-2 space-y-2',
-        open ? 'block' : 'hidden',
-      )}>
-        {isAuthenticated ? (
-          <>
-            <div className="flex items-center gap-3 py-2 border-b border-stone-100 mb-2">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="text-xs bg-amber-100 text-amber-700">{initials}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium text-stone-900">{user?.firstName} {user?.lastName}</p>
-                <p className="text-xs text-stone-500">{user?.email || user?.phoneNumber}</p>
-              </div>
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-full px-4 py-2"
+              >
+                <UserCircle className="w-4 h-4" /> Profile
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-1 z-50">
+                  <Link
+                    href="/profile"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <User className="w-4 h-4" /> Personal Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-gray-50 w-full text-left"
+                  >
+                    <LogOut className="w-4 h-4" /> Logout
+                  </button>
+                </div>
+              )}
             </div>
-            <Link href="/dashboard" className="block text-sm font-medium text-stone-600 py-2" onClick={() => setOpen(false)}>
-              Dashboard
-            </Link>
-            <button onClick={() => { logout(); setOpen(false); }} className="block text-sm text-red-600 py-2">
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link href="/login" className="block text-sm text-stone-600 py-2" onClick={() => setOpen(false)}>
-              Login
-            </Link>
-            <Link href="/register" className="block text-sm text-stone-600 py-2" onClick={() => setOpen(false)}>
-              Register
-            </Link>
-          </>
-        )}
+          )}
+        </div>
       </div>
-    </header>
+    </nav>
   );
-}
+};

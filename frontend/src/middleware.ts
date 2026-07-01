@@ -12,7 +12,6 @@ const protectedRoutes = [
   '/checkout',
 ];
 
-const protectedRoutes = ['/dashboard', '/dashboard/:path*', '/shop/:path*', '/products/:path*', '/buyer', '/buyer/:path*'];
 
 const authRoutes = ['/login', '/register', '/forgot-password'];
 
@@ -53,10 +52,19 @@ export function middleware(request: NextRequest) {
     const role = getRoleFromToken(token);
     return NextResponse.redirect(new URL(getDashboardByRole(role), request.url));
   }
+  console.log('Middleware Path:', pathname, 'Token exists:', !!token);
+
+  // If user is logged in and trying to access /login, 
+  // they are being forcefully redirected to /admin.
+  // if (pathname === '/login' && token) {
+  //   console.log('Redirecting logged-in user to /admin');
+  //   return NextResponse.redirect(new URL('/admin', request.url));
+  // }
 
   return NextResponse.next();
 }
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
+  // matcher: ['/login'],
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { io } from 'socket-io-client';
+import { io } from 'socket.io-client';
 import { toast } from 'sonner';
 
 const SOCKET_URL = 'http://10.2.0.2:5000'; 

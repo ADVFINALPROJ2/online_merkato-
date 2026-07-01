@@ -1,6 +1,10 @@
+import { AuthProvider } from '@/contexts/auth-context';
+import { Navbar } from '@/components/navbar';
+import { Footer } from '@/components/landing/footer';
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-md items-center justify-center px-4 py-12">
+    <div className="auth-layout">
       {children}
     </div>
   );
