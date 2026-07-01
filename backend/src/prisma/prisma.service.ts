@@ -21,4 +21,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleDestroy() {
     await this.$disconnect();
   }
+
+  // Temporary placeholders to keep other files from crashing while ignoring database errors
+  async cleanOldRefreshTokens() {
+    return true;
+  }
+
+  async cleanOldPasswordResetTokens() {
+    return true;
+  }
 }

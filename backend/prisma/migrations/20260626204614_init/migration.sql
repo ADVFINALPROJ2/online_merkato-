@@ -1,13 +1,5 @@
--- DropForeignKey
-ALTER TABLE "Product" DROP CONSTRAINT "Product_categoryId_fkey";
-
 -- AlterTable
-ALTER TABLE "Product" ADD COLUMN     "imageUrl" TEXT,
-ADD COLUMN     "isActive" BOOLEAN NOT NULL DEFAULT true,
-ALTER COLUMN "description" DROP NOT NULL,
-ALTER COLUMN "quantity" SET DEFAULT 0,
-ALTER COLUMN "status" SET DEFAULT 'ACTIVE',
-ALTER COLUMN "categoryId" DROP NOT NULL;
+ALTER TABLE "Product" ADD COLUMN     "isActive" BOOLEAN NOT NULL DEFAULT true;
 
 -- CreateTable
 CREATE TABLE "carts" (
@@ -36,9 +28,6 @@ CREATE UNIQUE INDEX "carts_userId_key" ON "carts"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "cart_items_cartId_productId_key" ON "cart_items"("cartId", "productId");
-
--- AddForeignKey
-ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "carts" ADD CONSTRAINT "carts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

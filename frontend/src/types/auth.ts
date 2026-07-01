@@ -9,6 +9,20 @@ export interface RegisterDto {
   email?: string;
   phoneNumber: string;
   password: string;
+  role?: 'BUYER' | 'SELLER' | 'ADMIN' | 'DELIVERY';
+}
+
+export interface ForgotPasswordDto {
+  email: string;
+}
+
+export interface ResetPasswordDto {
+  token: string;
+  password: string;
+}
+
+export interface RefreshTokenDto {
+  refreshToken: string;
 }
 
 export interface User {
@@ -24,6 +38,7 @@ export interface AuthResponse {
   message: string;
   accessToken: string;
   user: User;
+  refreshToken?: string;
 }
 
 export interface AuthState {

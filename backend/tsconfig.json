@@ -30,4 +30,4 @@
     "dist",
     "prisma/seed.ts"
   ]
-}
+ }

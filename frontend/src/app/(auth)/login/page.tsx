@@ -2,21 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Store, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { FormField } from '@/components/ui/form-field';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
-import { AxiosError } from 'axios';
+import Link from 'next/link';
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'Email or phone is required'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email('Enter a valid email'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -24,86 +21,53 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginForm>({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginForm) => {
-    setServerError('');
     try {
-      await login(data);
-      router.push('/dashboard');
-    } catch (err) {
-      if (err instanceof AxiosError) {
-        setServerError(err.response?.data?.message || 'Invalid credentials');
-      } else {
-        setServerError('Something went wrong. Please try again.');
+      const user = await login(data);
+
+      // Role-based redirect
+      if (user.role === 'SELLER') {
+        router.push('/seller/dashboard');
+      }if (user.role === 'Admin'){
+        router.push('/admin');
+      }if (user.role === 'delivery'){
+        router.push('/delivery');
+      }if(user.role === 'BUYER') {
+        router.push('/buyer');
       }
+    } catch (err: any) {
+      setServerError(err.response?.data?.message || 'Login failed.');
     }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="items-center text-center">
-        <div className="rounded-full bg-amber-100 p-3 mb-2">
-          <Store className="h-6 w-6 text-amber-600" />
-        </div>
-        <CardTitle>Welcome back</CardTitle>
-        <CardDescription>Sign in to your seller account</CardDescription>
-      </CardHeader>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader><CardTitle>Sign In</CardTitle></CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
-          {serverError && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600">
-              {serverError}
-            </div>
-          )}
-          <FormField label="Email or Phone" error={errors.email?.message}>
-            <Input
-              type="text"
-              placeholder="you@example.com"
-              {...register('email')}
-              error={!!errors.email}
-            />
-          </FormField>
-          <FormField label="Password" error={errors.password?.message}>
-            <div className="relative">
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                {...register('password')}
-                error={!!errors.password}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </FormField>
-          <Button type="submit" className="w-full" loading={isSubmitting}>
-            Sign In
+          {serverError && <div className="text-red-600 text-sm">{serverError}</div>}
+          <Input {...register('email')} placeholder="Email" />
+          <Input type="password" {...register('password')} placeholder="Password" />
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in...' : 'Sign In'}
           </Button>
+           <div className="text-center text-sm mt-4">
+            Don't have an account?{' '}
+            <Link href="/register" className="text-blue-600 hover:underline font-semibold">
+              Register
+            </Link>
+          </div>
+
         </CardContent>
       </form>
-      <CardFooter className="justify-center">
-        <p className="text-sm text-stone-500">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-medium text-amber-600 hover:text-amber-700">
-            Register
-          </Link>
-        </p>
-      </CardFooter>
     </Card>
+
   );
+ 
 }

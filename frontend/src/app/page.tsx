@@ -1,8 +1,14 @@
-export default function Home() {
+﻿import { HeroSection } from '@/components/landing/hero_section';
+import { CategoryGrid } from '@/components/landing/category-grid';
+import { ProductListing } from '@/components/landing/product-listing';
+import { Footer } from '@/components/landing/footer';
+
+export default function LandingPage() {
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h1>Online Merkato Frontend</h1>
-      <p>Local development server is running successfully!</p>
-    </div>
+    <main className="max-w-10xl mx-auto px-4 space-y-12">
+      <HeroSection />
+      <CategoryGrid />
+      <ProductListing />
+    </main>
   );
 }

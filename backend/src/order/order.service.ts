@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { NotificationService } from '../notification/notification.service';
+import { NotificationsGateway } from '../notification/notifications.gateway'; // Ensure your file path matches this exactly!
 
 @Injectable()
 export class OrderService {
   constructor(
     private prisma: PrismaService,
-    private notificationService: NotificationService,
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   // #28 Place Order
@@ -37,7 +37,7 @@ export class OrderService {
 
     const deliveryFee = 50;
 
-    return this.prisma.order.create({
+    const order = await this.prisma.order.create({
       data: {
         buyerId,
         totalAmount: total + deliveryFee,
@@ -48,19 +48,78 @@ export class OrderService {
       },
       include: { items: true },
     });
+
+    // 💡 REAL-TIME BROADCAST: Notify Shop(s) & Buyer instantly
+    try {
+      // 💡 FIXED: Changed sellerId to shopId based on your Prisma error log!
+      const uniqueShopIds = Array.from(new Set(products.map(p => p.shopId).filter(Boolean)));
+      
+      // 1. Alert every shop owner who owns products in this order
+      uniqueShopIds.forEach((shopId: string) => {
+        this.notificationsGateway.sendNotification(shopId, 'new_order', {
+          message: `🎉 You have a new order request! (Order #${order.id})`,
+          orderId: order.id,
+        });
+      });
+
+      // 2. Alert the buyer that their order went through successfully
+      this.notificationsGateway.sendNotification(buyerId, 'order_status', {
+        message: '✅ Your order has been placed and is pending approval!',
+        status: 'PENDING',
+        orderId: order.id,
+      });
+    } catch (err) {
+      console.error('Real-time order placement notifications failed:', err);
+    }
+
+    return order;
   }
 
   // #29 Cancel Order
   async cancelOrder(buyerId: string, orderId: string) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    const order = await this.prisma.order.findUnique({ 
+      where: { id: orderId },
+      include: { items: true }
+    });
+    
     if (!order) throw new NotFoundException('Order not found');
     if (order.buyerId !== buyerId) throw new ForbiddenException();
     if (order.status !== 'PENDING') throw new ForbiddenException('Only PENDING orders can be cancelled');
 
-    return this.prisma.order.update({
+    const updated = await this.prisma.order.update({
       where: { id: orderId },
       data: { status: 'CANCELLED' },
     });
+
+    // 💡 REAL-TIME BROADCAST: Notify Buyer and Shops of cancellation
+    try {
+      // 1. Notify the buyer
+      this.notificationsGateway.sendNotification(buyerId, 'order_status', {
+        message: `🛑 You cancelled Order #${orderId}.`,
+        status: 'CANCELLED',
+        orderId,
+      });
+
+      // 2. Safely find the shops for these items to alert them of cancellation
+      const productIds = order.items.map(item => item.productId);
+      const products = await this.prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { shopId: true } // 💡 FIXED: Changed sellerId to shopId
+      });
+
+      const shopIds = Array.from(new Set(products.map(p => p.shopId).filter(Boolean)));
+      
+      shopIds.forEach((shopId: string) => {
+        this.notificationsGateway.sendNotification(shopId, 'order_cancelled', {
+          message: `⚠️ Customer cancelled Order #${orderId}.`,
+          orderId,
+        });
+      });
+    } catch (err) {
+      console.error('Cancellation broadcast alert failed:', err);
+    }
+
+    return updated;
   }
 
   // #30 Track Order
@@ -94,7 +153,16 @@ export class OrderService {
       data: { status: 'DELIVERED' },
     });
 
-    await this.notificationService.notifyDeliveryUpdate(buyerId, orderId, 'DELIVERED');
+    // 💡 REAL-TIME BROADCAST: Notify Buyer that the order status updated to delivered
+    try {
+      this.notificationsGateway.sendNotification(buyerId, 'order_status', {
+        message: `🏁 Order #${orderId} has been successfully marked as delivered! Thank you!`,
+        status: 'DELIVERED',
+        orderId,
+      });
+    } catch (err) {
+      console.error('Delivery confirmation broadcast alert failed:', err);
+    }
 
     return updated;
   }

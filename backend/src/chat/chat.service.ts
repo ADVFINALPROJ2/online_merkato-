@@ -5,8 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createMessage(data: { id: string; text: string; sender: string }) {
-    const message = await this.prisma.message.create({
+  async createMessage(data: { orderId: string; text: string; sender: string }) {
+    const message = await this.prisma.chatMessage.create({
       data,
     });
 
@@ -14,7 +14,7 @@ export class ChatService {
   }
 
   async getMessages(orderId: string) {
-    return this.prisma.message.findMany({
+    return this.prisma.chatMessage.findMany({
       where: { orderId },
       orderBy: { createdAt: 'asc' },
     });

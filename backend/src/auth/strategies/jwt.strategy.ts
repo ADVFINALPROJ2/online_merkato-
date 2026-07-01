@@ -1,32 +1,28 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from '../../prisma/prisma.service';
-
-interface JwtPayload {
-  id: string;    // ◄ Change 'sub' to 'id' to match your login token structure
-  email: string;
-  role: string;
-}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private prisma: PrismaService) {
+  constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'secret',
+      // Ensure your .env has the SAME secret used in AuthModule
+      secretOrKey: process.env.JWT_SECRET || 'OnlineMerkatoSuperSecretKey2026', 
     });
   }
 
+  // The payload here is what comes OUT of the decrypted JWT
   async validate(payload: any) {
-  // 🧪 TEMPORARY TEST: Bypass the database lookup completely
-  console.log('Decrypted Token Payload:', payload);
-  
-  return { 
-    id: payload.id || payload.sub, 
-    email: payload.email, 
-    role: payload.role 
-  };
-}
+    // Debugging: View exactly what the server sees
+    console.log("JWT Payload received:", payload);
+    
+    // We return this object, and NestJS attaches it to the request as 'req.user'
+    return { 
+      id: payload.id, 
+      email: payload.email, 
+      role: payload.role 
+    };
+  }
 }

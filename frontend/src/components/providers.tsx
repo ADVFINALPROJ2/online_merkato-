@@ -1,23 +1,15 @@
 'use client';
 
-import { type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '@/contexts/auth-context';
-import { Toaster } from '@/components/ui/sonner';
+import { useState } from 'react';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { staleTime: 1000 * 60 * 5, retry: 1 },
-  },
-});
+export default function QueryProvider({ children }: { children: React.ReactNode }) {
+  // Create the client once per component lifecycle
+  const [queryClient] = useState(() => new QueryClient());
 
-export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        {children}
-        <Toaster />
-      </AuthProvider>
+      {children}
     </QueryClientProvider>
   );
 }

@@ -1,16 +1,35 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Headers } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { ApiOperation, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { RegisterDriverDto } from './dto/register-driver.dto';
+import { LoginDto } from './dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Register a new user (buyer/seller)' })
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({ status: 201, description: 'User registered successfully' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
 
   @Post('register/driver')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new driver' })
+  @ApiBody({ type: RegisterDriverDto })
+  @ApiResponse({ status: 201, description: 'Driver registered successfully' })
   async registerDriver(@Body() dto: RegisterDriverDto) {
     return this.authService.registerDriver(dto);
   }
@@ -20,7 +39,28 @@ export class AuthController {
   @ApiOperation({ summary: 'Log in an existing user' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Logged in successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Get('validate-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Validate access token' })
+  validateToken(@Headers('authorization') authHeader?: string) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return { valid: false };
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: process.env.JWT_SECRET || 'secret',
+      });
+      return { valid: true, payload };
+    } catch {
+      return { valid: false };
+    }
   }
 }
