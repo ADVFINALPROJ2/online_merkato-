@@ -26,10 +26,10 @@ export class RegisterDto {
   @MaxLength(50)
   lastName!: string;
 
-  @ApiPropertyOptional({ example: 'john.doe@example.com' })
-  @IsOptional()
+  @ApiProperty({ example: 'john.doe@example.com' })
   @IsEmail()
-  email?: string; // Optional email
+  @IsNotEmpty()
+  email!: string
 
   @ApiProperty({ example: '0911234567' })
   @IsString()

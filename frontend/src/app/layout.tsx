@@ -16,7 +16,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        {/* Nesting providers ensures all components have access to context */}
         <QueryProvider>
           <AuthProvider>
             <I18nProvider>

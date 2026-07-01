@@ -13,7 +13,7 @@ import { CategoryModule } from './category/category.module';
 import { BuyerModule } from './buyer/buyer.module';
 import { CartModule } from './cart/cart.module';
 import { I18nModule } from './i18n/i18n.module';
-import { AdminModule } from './user/admin.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -35,3 +35,4 @@ import { AdminModule } from './user/admin.module';
   ],
 })
 export class AppModule {}
+

@@ -1,26 +1,20 @@
-import crypto from 'node:crypto';
-import { 
-  Injectable, 
-  UnauthorizedException, 
-  ConflictException, 
-  BadRequestException 
-} from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RegisterDriverDto } from './dto/register-driver.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { LoginDto } from './dto/login.dto';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { Role } from '@prisma/client'; 
-import { randomBytes } from 'crypto';
+import crypto from 'node:crypto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
+    private prisma: PrismaService,
+    private jwtService: JwtService,
   ) {}
 
   private readonly REFRESH_TOKEN_DAYS = 30;
@@ -53,8 +47,6 @@ export class AuthService {
     });
   }
 
-  // Single source of truth for what register/login return.
-  // accessToken (camelCase) + user.firstName/lastName to match frontend AuthResponse type.
   private buildUserResponse(user: { id: string; firstName: string; lastName: string; email: string | null; phoneNumber: string; role: string }) {
     const tokens = this.generateTokens(user);
     return {
@@ -71,15 +63,12 @@ export class AuthService {
     };
   }
 
-
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existingUser) {
-      throw new ConflictException('Email already registered');
-    }
+    if (existingUser) throw new BadRequestException('Email already registered');
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const role = dto.role ?? 'SELLER';
+    const role = dto.role ?? 'BUYER';
 
     const user = await this.prisma.user.create({
       data: {
@@ -93,7 +82,7 @@ export class AuthService {
           shop: {
             create: {
               name: `${dto.firstName}'s Shop`,
-              description: 'Sustainable fashion and custom apparel marketplace vendor profile.',
+              description: 'Marketplace vendor profile.',
             },
           },
         }),
@@ -101,98 +90,82 @@ export class AuthService {
     });
 
     return this.buildUserResponse(user);
-    
-    // 3. Normalize phone
-    const normalizedPhone = dto.phoneNumber.startsWith('0') 
-      ? dto.phoneNumber.replace('0', '+251') 
-      : dto.phoneNumber;
+  }
 
-    // 4. Prepare base user data
-    const userData: any = {
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-      email: dto.email,
-      password: hashedPassword,
-      phoneNumber: normalizedPhone,
-      role: dto.role || Role.BUYER,
-    };
+  async registerDriver(dto: RegisterDriverDto) {
+    const existingUser = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (existingUser) throw new BadRequestException('Email already registered');
 
-  
-    if (dto.role === Role.SELLER) {
-      userData.shop = {
-        create: {
-          name: `${dto.firstName}'s Shop`,
-          description: 'Marketplace vendor profile.',
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          email: dto.email,
+          phoneNumber: dto.phoneNumber,
+          password: hashedPassword,
+          role: 'DRIVER',
         },
-      };
-    }
+      });
 
-    
-    const payload = { id: user.id, email: user.email, role: user.role };
-    const accessToken = this.jwtService.sign(payload);
+      await tx.driverProfile.create({
+        data: {
+          userId: createdUser.id,
+          vehicleType: dto.vehicleType,
+          licensePlate: dto.licensePlate,
+          idImageUrl: dto.idImageUrl,
+          licenseImageUrl: dto.licenseImageUrl,
+        },
+      });
 
-    return {
-      accessToken,
-      user: {
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        email: user.email,
-        role: user.role,
-      },
-    };
+      return createdUser;
+    });
+
+    return this.buildUserResponse(user);
   }
 
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
 
-    const tokens = this.generateTokens(user);
-    return {
-      message: 'Login successful',
-      accessToken: tokens.accessToken,
-      user: { 
-        id: user.id, 
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email, 
-        phoneNumber: user.phoneNumber,
-        role: user.role 
-      },
-    };
+    return this.buildUserResponse(user);
   }
 
-  // --- REFRESH & ACCOUNT RECOVERY METHODS (MATCHES CONTROLLER) ---
-
   async refresh(dto: RefreshTokenDto) {
-    const tokenRecord = await this.prisma.refreshToken.findFirst({
+    const tokens = await this.prisma.refreshToken.findMany({
       where: { expiresAt: { gt: new Date() } },
     });
-    if (!tokenRecord) {
+
+    let matchedToken: typeof tokens[0] | null = null;
+    for (const t of tokens) {
+      if (await bcrypt.compare(dto.refreshToken, t.token)) {
+        matchedToken = t;
+        break;
+      }
+    }
+
+    if (!matchedToken) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    const isValid = await bcrypt.compare(dto.refreshToken, tokenRecord.token);
-    if (!isValid) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
-    }
-
-    const user = await this.prisma.user.findUnique({ where: { id: tokenRecord.userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: matchedToken.userId } });
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    await this.prisma.refreshToken.delete({ where: { id: tokenRecord.id } });
+    await this.prisma.refreshToken.delete({ where: { id: matchedToken.id } });
     const newRefreshToken = await this.generateRefreshToken(user.id);
 
     return {
-      accessToken: this.jwtService.sign({ sub: user.id, email: user.email, role: user.role }, { expiresIn: this.ACCESS_TOKEN_EXPIRY }),
+      accessToken: this.jwtService.sign(
+        { sub: user.id, email: user.email, role: user.role },
+        { expiresIn: this.ACCESS_TOKEN_EXPIRY },
+      ),
       refreshToken: newRefreshToken,
     };
   }
@@ -200,7 +173,7 @@ export class AuthService {
   async forgotPassword(dto: ForgotPasswordDto) {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (user) {
-      const raw = randomBytes(32).toString('hex');
+      const raw = crypto.randomBytes(32).toString('hex');
       const hashed = await bcrypt.hash(raw, 10);
       const expiresAt = new Date(Date.now() + this.RESET_TOKEN_HOURS * 3600000);
       await this.prisma.passwordResetToken.create({
@@ -236,5 +209,4 @@ export class AuthService {
 
     return { message: 'Password reset successfully' };
   }
-
 }

@@ -1,10 +1,16 @@
 {
+  "dependencies": {
+    "@nestjs/mapped-types": "*",
+    "@prisma/client": "^7.8.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1"
+  },
   "name": "online-merkato",
   "version": "1.0.0",
   "description": "Online Merkato - E-commerce Platform",
   "private": true,
   "scripts": {
-    "backend:dev": "npm run start:dev --prefix backend",
+    "backend:dev": "dotenv -e .env -- npm run start:dev --prefix backend",
     "frontend:dev": "npm run dev --prefix frontend",
     "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
     "backend:build": "npm run build --prefix backend",
@@ -15,8 +21,10 @@
     "install:all": "npm run backend:install && npm run frontend:install"
   },
   "devDependencies": {
-    "concurrently": "^8.2.0",
+    "@nestjs/cli": "^11.0.23",
     "@prisma/config": "^7.8.0",
-    "dotenv": "^17.4.2"
+    "concurrently": "^8.2.0",
+    "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0"
   }
 }

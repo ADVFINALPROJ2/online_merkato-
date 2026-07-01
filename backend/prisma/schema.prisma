@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -12,6 +11,7 @@ enum Role {
   BUYER
   ADMIN
   DELIVERY
+  DRIVER
 }
 
 enum OrderStatus {
@@ -33,12 +33,6 @@ enum PaymentStatus {
   REFUNDED
 }
 
-enum VerificationStatus {
-  PENDING
-  VERIFIED
-  REJECTED
-}
-
 enum ProductStatus {
   ACTIVE
   INACTIVE
@@ -46,44 +40,66 @@ enum ProductStatus {
   DRAFT
 }
 
+enum VehicleType {
+  MOTORCYCLE
+  CAR
+  TRUCK
+  BAJAJ
+  BICYCLE
+  FOOT
+}
+
 model User {
-  id          String   @id @default(uuid())
-  firstName   String
-  lastName    String
-  email       String?  @unique
-  phoneNumber String
-  password    String
-  role        Role     @default(SELLER)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String         @id @default(uuid())
+  firstName       String
+  lastName        String
+  email           String         @unique
+  phoneNumber     String         @unique
+  password        String
+  role            Role           @default(SELLER)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   shop            Shop?
-  cart            Cart?
   ordersAsBuyer   Order[]        @relation("BuyerOrders")
   reviewsGiven    Review[]       @relation("BuyerReviews")
   reviewsReceived Review[]       @relation("SellerReviews")
   deliveries      Delivery[]
   notifications   Notification[]
-  craftRequests   CraftRequest[]  @relation("BuyerCrafts")
+  driverProfile   DriverProfile?
+  cart            Cart?
   refreshTokens   RefreshToken[]
   passwordResetTokens PasswordResetToken[]
 }
 
+model DriverProfile {
+  id              String      @id @default(uuid())
+  userId          String      @unique
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType     VehicleType @default(MOTORCYCLE)
+  licensePlate    String?
+  idImageUrl      String
+  licenseImageUrl String?
+  status          String      @default("PENDING")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
 model Shop {
-  id                 String             @id @default(uuid())
-  name               String
-  description        String
-  logoUrl            String?
-  bannerUrl          String?
-  contactPhone       String?
+  id           String        @id @default(uuid())
+  name         String
+  description  String
+  logoUrl      String?
+  bannerUrl    String?
+  contactPhone String?
   businessType       String?
-  verificationStatus VerificationStatus @default(PENDING)
-  sellerId           String             @unique
-  seller             User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  location           ShopLocation?
-  products           Product[]
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  verificationStatus String            @default("PENDING")
+  sellerId           String            @unique
+  seller       User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  products     Product[]
+  location     ShopLocation?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model ShopLocation {
@@ -91,27 +107,15 @@ model ShopLocation {
   shopId    String   @unique
   shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   region    String
-  city      String
-  subCity   String
-  woreda    String
-  terra     String
-  latitude  Float
-  longitude Float
+  city      String?
+  subCity   String?
+  woreda    String?
+  terra     String?
+  latitude  Float?
+  longitude Float?
   landmark  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model CraftRequest {
-  id              String   @id @default(uuid())
-  title           String
-  description     String
-  budget          Float
-  imageUrl        String?
-  buyerId         String
-  buyer           User     @relation("BuyerCrafts", fields: [buyerId], references: [id], onDelete: Cascade)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
 }
 
 model Category {
@@ -119,11 +123,11 @@ model Category {
   name        String     @unique
   description String?
   parentId    String?
-  parent      Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryChildren")
+  parent      Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryToSubcategory")
+  products    Product[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
-  products    Product[]
 }
 
 model Product {
@@ -131,13 +135,14 @@ model Product {
   name        String
   description String?
   price       Float
+  stock       Int           @default(0)
   quantity    Int           @default(0)
-  status      ProductStatus @default(ACTIVE)
-  isActive    Boolean       @default(true)
-  images      String[]
   imageUrl    String?
+  images      String[]      @default([])
+  isActive    Boolean       @default(true)
+  status      ProductStatus @default(DRAFT)
   shopId      String
-  shop        Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop        Shop          @relation(fields: [shopId], references: [id])
   categoryId  String?
   category    Category?     @relation(fields: [categoryId], references: [id])
   orderItems  OrderItem[]
@@ -154,8 +159,6 @@ model Cart {
   items     CartItem[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-
-  @@map("carts")
 }
  model CartItem {
   id        String   @id @default(uuid())
@@ -163,12 +166,11 @@ model Cart {
   cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  quantity  Int      @default(1)
+  quantity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([cartId, productId])
-  @@map("cart_items")
 }
 
 model Order {
@@ -184,6 +186,7 @@ model Order {
   items           OrderItem[]
   payment         Payment?
   delivery        Delivery?
+  chatMessages    ChatMessage[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -207,6 +210,7 @@ model Payment {
   status    PaymentStatus @default(UNPAID)
   chapaRef  String?
   createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 
 model Review {
@@ -233,17 +237,18 @@ model Delivery {
   pickedUpAt  DateTime?
   deliveredAt DateTime?
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Notification {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  message   String
+  title     String   @default("Notification")
+  message   String   @default("")
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
-
 model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
@@ -259,5 +264,14 @@ model PasswordResetToken {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  sender    String
+  text      String
   createdAt DateTime @default(now())
 }

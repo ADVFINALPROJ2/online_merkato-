@@ -2,31 +2,41 @@ import { Controller, Post, Body, HttpCode, HttpStatus, Get, Headers } from '@nes
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto'; // Added this import
+import { RegisterDriverDto } from './dto/register-driver.dto';
+import { LoginDto } from './dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
 
-@ApiTags('Auth')
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new seller' })
+  @ApiOperation({ summary: 'Register a new user (buyer/seller)' })
   @ApiBody({ type: RegisterDto })
-  @ApiResponse({ status: 201, description: 'Seller registered successfully' })
+  @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
-
   async register(@Body() dto: RegisterDto) {
-  const result = await this.authService.register(dto);
+    return this.authService.register(dto);
+  }
 
-  return result;
-}
-
+  @Post('register/driver')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Register a new driver' })
+  @ApiBody({ type: RegisterDriverDto })
+  @ApiResponse({ status: 201, description: 'Driver registered successfully' })
+  async registerDriver(@Body() dto: RegisterDriverDto) {
+    return this.authService.registerDriver(dto);
+  }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Log in an existing seller' })
+  @ApiOperation({ summary: 'Log in an existing user' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Logged in successfully' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
@@ -35,13 +45,9 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
-
-
-
-
   @Get('validate-token')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Validate access token (optional utility)' })
+  @ApiOperation({ summary: 'Validate access token' })
   validateToken(@Headers('authorization') authHeader?: string) {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return { valid: false };
@@ -49,7 +55,7 @@ export class AuthController {
 
     const token = authHeader.split(' ')[1];
     try {
-      const payload = this.authService['jwtService'].verify(token, {
+      const payload = this.jwtService.verify(token, {
         secret: process.env.JWT_SECRET || 'secret',
       });
       return { valid: true, payload };
