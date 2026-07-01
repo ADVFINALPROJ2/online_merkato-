@@ -58,12 +58,13 @@ export default function RegisterPage() {
         password: data.password,
         role: data.role,
          });
-        // option
+        
 
-      // Role-based redirect
       if (user.role === 'SELLER') {
-        router.push('/seller/dashboard');
-      } else {
+        router.push('/dashboard');
+      } if (user.role === 'DELIVERY') {
+        router.push('/delivery');
+      }else {
         router.push('/buyer');
       }
     } catch (err: any) {
@@ -84,6 +85,7 @@ export default function RegisterPage() {
           <select {...register('role')} className="w-full border p-2 rounded">
             <option value="BUYER">Buyer</option>
             <option value="SELLER">Seller</option>
+            <option value="DELIVERY">Delivery </option>
           </select>
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Creating...' : 'Create Account'}

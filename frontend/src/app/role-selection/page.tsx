@@ -40,19 +40,6 @@ export default function RoleSelectionPage() {
           </button>
         ))}
       </div>
-      
-      {/* Moved Logout button outside the grid so it isn't nested inside another button */}
-      <Button 
-        variant="ghost" 
-        onClick={handleLogout} 
-        className="mt-12 text-red-500 hover:text-red-700 gap-2"
-      >
-        <LogOut className="w-4 h-4" /> Logout
-      </Button>
-
-      <button className="mt-4 text-gray-400 hover:text-gray-600 text-sm">
-        Staff access
-      </button>
     </div>
   );
 }
