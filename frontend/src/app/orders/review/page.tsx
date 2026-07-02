@@ -1,116 +1,139 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Star, Package, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Package, ChevronRight, Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { orderService } from "@/services/order-service";
 
-const mockReviewOrder = {
-  id: 'ORD-1038',
-  items: [{ name: 'Teff Flour 2kg', qty: 1 }],
+type OrderStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "IN_TRANSIT"
+  | "DELIVERED"
+  | "CANCELLED";
+
+interface HistoryOrder {
+  id: string;
+  createdAt: string;
+  totalAmount: number;
+  status: OrderStatus;
+  items: {
+    product: { name: string };
+    quantity: number;
+  }[];
+}
+
+const statusStyles: Record<
+  OrderStatus,
+  { label: string; variant: "success" | "danger" | "warning" | "default" }
+> = {
+  PENDING: { label: "Pending", variant: "warning" },
+  CONFIRMED: { label: "Confirmed", variant: "default" },
+  IN_TRANSIT: { label: "In Transit", variant: "default" },
+  DELIVERED: { label: "Delivered", variant: "success" },
+  CANCELLED: { label: "Cancelled", variant: "danger" },
 };
 
-export default function ReviewPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const orderId = searchParams.get('id') || mockReviewOrder.id;
+export default function OrderHistoryPage() {
+  const [orders, setOrders] = useState<HistoryOrder[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const [rating, setRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const data = await orderService.getMyOrders();
+        setOrders(data || []);
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleSubmit = async () => {
-    if (rating === 0) {
-      toast.error('Please select a star rating');
-      return;
-    }
-    setSubmitting(true);
-    // TODO: replace with real API call to submit review
-    await new Promise((r) => setTimeout(r, 800));
-    setSubmitting(false);
-    setSubmitted(true);
-    toast.success('Review submitted, thank you!');
-  };
+    fetchOrders();
+  }, []);
 
-  if (submitted) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <div className="rounded-full bg-emerald-100 p-4 w-fit mx-auto mb-4">
-          <CheckCircle2 className="h-8 w-8 text-emerald-600" />
-        </div>
-        <h1 className="text-xl font-bold text-stone-900 mb-2">Thanks for your review!</h1>
-        <p className="text-stone-500 text-sm mb-6">Your feedback helps other shoppers and sellers improve.</p>
-        <Button onClick={() => router.push('/orders')}>Back to Orders</Button>
-      </div>
-    );
+  const filtered = orders.filter(
+    (o) =>
+      o.id.toLowerCase().includes(search.toLowerCase()) ||
+      o.items?.some((i) =>
+        i.product.name.toLowerCase().includes(search.toLowerCase())
+      )
+  );
+
+  if (loading) {
+    return <div className="p-10 text-center">Loading orders...</div>;
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-stone-900">Rate your order</h1>
-        <p className="text-stone-500 text-sm mt-1">
-          Order <span className="font-mono font-semibold text-stone-700">{orderId}</span>
-        </p>
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Order History</h1>
+
+      <div className="relative mb-5">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+        <Input
+          placeholder="Search orders..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3 pb-4 mb-5 border-b border-stone-100">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-stone-50 border border-stone-100">
-              <Package className="h-5 w-5 text-stone-400" />
-            </div>
-            <div>
-              {mockReviewOrder.items.map((item, i) => (
-                <p key={i} className="text-sm font-medium text-stone-900">
-                  {item.name} <span className="text-stone-400">× {item.qty}</span>
-                </p>
-              ))}
-            </div>
-          </div>
+      {filtered.length === 0 ? (
+        <div className="text-center p-10 border rounded-xl">
+          No orders found
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((order) => {
+            const s = statusStyles[order.status];
 
-          <p className="text-sm font-medium text-stone-700 mb-3">How was your experience?</p>
-          <div className="flex justify-center gap-2 mb-6">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                onMouseEnter={() => setHoverRating(star)}
-                onMouseLeave={() => setHoverRating(0)}
-                onClick={() => setRating(star)}
-                className="transition-transform hover:scale-110"
-              >
-                <Star
-                  className={`h-9 w-9 ${
-                    (hoverRating || rating) >= star
-                      ? 'fill-amber-400 text-amber-400'
-                      : 'fill-stone-100 text-stone-200'
-                  }`}
-                />
-              </button>
-            ))}
-          </div>
+            const summary =
+              order.items?.map((i) => i.product.name).join(", ") || "Order";
 
-          <label className="text-sm font-medium text-stone-700 mb-1.5 block">
-            Share your thoughts <span className="text-stone-400 font-normal">(optional)</span>
-          </label>
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Tell others about the product quality, delivery, and seller..."
-            rows={4}
-            className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 resize-none"
-          />
+            return (
+              <Link key={order.id} href={`/orders/track?id=${order.id}`}>
+                <Card className="hover:border-stone-300 transition-colors cursor-pointer">
+                  <CardContent className="py-4 flex items-center gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-50 border">
+                      <Package className="h-5 w-5 text-stone-400" />
+                    </div>
 
-          <Button onClick={handleSubmit} loading={submitting} className="w-full mt-5">
-            Submit Review
-          </Button>
-        </CardContent>
-      </Card>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-mono font-semibold">
+                          {order.id}
+                        </span>
+                        <Badge variant={s.variant}>{s.label}</Badge>
+                      </div>
+
+                      <p className="text-sm text-stone-500 truncate mt-1">
+                        {summary}
+                      </p>
+
+                      <p className="text-xs text-stone-400">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div className="font-bold">
+                      Br {order.totalAmount}
+                    </div>
+
+                    <ChevronRight className="h-4 w-4 text-stone-300" />
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

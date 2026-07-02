@@ -63,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const res = await authService.login(dto);
 
   localStorage.setItem('token', res.accessToken);
+  if (res.refreshToken) localStorage.setItem('refreshToken', res.refreshToken);
   localStorage.setItem('user', JSON.stringify(res.user));
   setCookie('token', res.accessToken);
 
@@ -88,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.user) throw new Error("No user data returned from registration");
 
       localStorage.setItem('token', res.accessToken);
+      if (res.refreshToken) localStorage.setItem('refreshToken', res.refreshToken);
       localStorage.setItem('user', JSON.stringify(res.user));
       setCookie('token', res.accessToken);
       

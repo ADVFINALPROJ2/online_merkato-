@@ -1,25 +1,20 @@
 'use client';
-
 import { ShoppingBag, Store, Truck, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-
 export default function RoleSelectionPage() {
   const router = useRouter();
   const { logout } = useAuth();
-
   const roles = [
-    { name: 'Buyer', desc: 'Shop and track orders', icon: ShoppingBag, path: '/dashboard/buyer' },
-    { name: 'Seller', desc: 'Manage your store', icon: Store, path: '/seller' },
-    { name: 'Delivery', desc: 'Accept deliveries', icon: Truck, path: '/dashboard/delivery' },
+    { name: 'Buyer', desc: 'Shop and track orders', icon: ShoppingBag, path: '/register?role=buyer' },
+    { name: 'Seller', desc: 'Manage your store', icon: Store, path: '/register?role=seller' },
+    { name: 'Delivery', desc: 'Accept deliveries', icon: Truck, path: '/driver/register' },
   ];
-
   const handleLogout = () => {
     logout();
     router.push('/login');
   };
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
       <h1 className="text-3xl font-bold mb-2 text-gray-900">Welcome to Digital Merkato</h1>

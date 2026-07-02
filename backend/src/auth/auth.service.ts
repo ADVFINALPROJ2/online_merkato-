@@ -47,21 +47,23 @@ export class AuthService {
     });
   }
 
-  private buildUserResponse(user: { id: string; firstName: string; lastName: string; email: string | null; phoneNumber: string; role: string }) {
-    const tokens = this.generateTokens(user);
-    return {
-      message: 'Operation successful',
-      accessToken: tokens.accessToken,
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        role: user.role,
-      },
-    };
-  }
+  private async buildUserResponse(user: { id: string; firstName: string; lastName: string; email: string | null; phoneNumber: string; role: string }) {
+  const tokens = this.generateTokens(user);
+  const refreshToken = await this.generateRefreshToken(user.id);
+  return {
+    message: 'Operation successful',
+    accessToken: tokens.accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+    },
+  };
+}
 
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({ where: { email: dto.email } });

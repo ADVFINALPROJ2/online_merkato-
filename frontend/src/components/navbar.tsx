@@ -27,7 +27,7 @@ export const Navbar = () => {
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     const q = search.trim();
-    if (q) router.push(`/buyer?q=${encodeURIComponent(q)}`);
+   if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
   };
 
   const handleLogout = () => {
@@ -49,9 +49,9 @@ export const Navbar = () => {
             placeholder="Search products..."
             className="w-full px-4 py-2.5 bg-transparent outline-none"
           />
-          <button type="submit" className="bg-blue-600 text-white p-3 hover:bg-blue-700">
-            <Search className="w-5 h-5" />
-          </button>
+         <button type="submit" className="bg-blue-600 text-white p-3 hover:bg-blue-700" aria-label="Search">
+  <Search className="w-5 h-5" />
+</button>
         </form>
 
         <div className="flex items-center gap-6 text-gray-600">
