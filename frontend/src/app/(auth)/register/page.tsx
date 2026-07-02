@@ -17,7 +17,11 @@ const registerSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
   phoneNumber: z.string().min(8, 'Enter a valid phone number'),
   email: z.string().email('Enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password:z.string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[a-z]/, 'Password must include a lowercase letter')
+  .regex(/[A-Z]/, 'Password must include an uppercase letter')
+  .regex(/[0-9]/, 'Password must include a number'),
   role: z.enum(['BUYER', 'SELLER', 'ADMIN', 'DELIVERY']),
 
 
@@ -39,11 +43,12 @@ export default function RegisterPage() {
   const Icon = meta.icon;
 
   const { register: registerUser } = useAuth();
-  const [serverError, setServerError] = useState('');
+ const [serverError, setServerError] = useState('');
+const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: 'BUYER' }
+    defaultValues: { role }
   });
 
   const onSubmit = async (data: RegisterForm) => {
@@ -61,12 +66,12 @@ export default function RegisterPage() {
         
 
       if (user.role === 'SELLER') {
-        router.push('/dashboard');
-      } if (user.role === 'DELIVERY') {
-        router.push('/delivery');
-      }else {
-        router.push('/buyer');
-      }
+  window.location.href = '/dashboard';
+} else if (user.role === 'DELIVERY') {
+  window.location.href = '/delivery';
+} else {
+  window.location.href = '/buyer';
+}
     } catch (err: any) {
       setServerError(err.response?.data?.message || 'Registration failed.');
     }
@@ -87,6 +92,7 @@ export default function RegisterPage() {
             <option value="SELLER">Seller</option>
             <option value="DELIVERY">Delivery </option>
           </select>
+          <pre className="text-xs text-red-500">{errors.password?.message ?? 'no error'}</pre>
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? 'Creating...' : 'Create Account'}
           </Button>

@@ -6,7 +6,7 @@ export default function SellerDashboard() {
 
   if (isLoading) return <div>Loading...</div>;
   
-  if (user?.role !== 'seller') {
+  if (user?.role !== 'SELLER')  {
      return <div className="p-8 text-red-600">Access Denied: You are not authorized to view this page.</div>;
   }
 

@@ -40,7 +40,7 @@ export default function BuyerDashboardPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    api.get('/orders')
+    api.get('/order/history')
       .then(({ data }) => setOrders(data ?? []))
       .catch(() => setOrders([]))
       .finally(() => setOrdersLoading(false));

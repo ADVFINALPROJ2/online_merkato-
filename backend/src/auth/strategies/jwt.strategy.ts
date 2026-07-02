@@ -14,15 +14,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   // The payload here is what comes OUT of the decrypted JWT
-  async validate(payload: any) {
-    // Debugging: View exactly what the server sees
-    console.log("JWT Payload received:", payload);
-    
-    // We return this object, and NestJS attaches it to the request as 'req.user'
-    return { 
-      id: payload.id, 
-      email: payload.email, 
-      role: payload.role 
-    };
-  }
+ async validate(payload: any) {
+  console.log("JWT Payload received:", payload);
+  return { 
+    id: payload.sub, 
+    email: payload.email, 
+    role: payload.role 
+  };
+}
 }

@@ -38,7 +38,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!isAuthenticated) return;
     import('@/services/api').then(({ default: api }) => {
-      api.get('/orders').then(({ data }) => setOrders(data ?? [])).catch(() => setOrders([]));
+      api.get('/order/history').then(({ data }) => setOrders(data ?? [])).catch(() => setOrders([]));
     });
   }, [isAuthenticated]);
 
@@ -127,7 +127,13 @@ export default function ProfilePage() {
               <div className="flex-1">
                 <div className="text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">Address</div>
                 {editing ? (
-                  <input value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1 w-full max-w-sm rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm outline-none focus:border-[var(--primary)]" />
+                  <input
+  value={address}
+  onChange={(e) => setAddress(e.target.value)}
+  aria-label="Address"
+  placeholder="Enter your address"
+  className="mt-1 w-full max-w-sm rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm outline-none focus:border-[var(--primary)]"
+/>
                 ) : (
                   <div className="font-medium">{address}</div>
                 )}

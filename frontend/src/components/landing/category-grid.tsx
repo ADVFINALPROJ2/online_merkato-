@@ -25,7 +25,7 @@ export const CategoryGrid = () => {
   return (
     <div className="grid grid-cols-3 md:grid-cols-6 gap-4 my-8">
       {categories.map((cat) => (
-        <Link key={cat.id} href={`/buyer?categoryId=${cat.id}`} className="flex flex-col items-center p-4 bg-white rounded-xl border hover:border-blue-200 transition-colors">
+        <Link key={cat.id} href={`/search?categoryId=${cat.id}`}className="flex flex-col items-center p-4 bg-white rounded-xl border hover:border-blue-200 transition-colors">
           <span className="text-3xl mb-2">{iconMap[cat.name.trim()] || '📦'}</span>
           <span className="text-sm font-medium">{cat.name}</span>
         </Link>
