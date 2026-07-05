@@ -4,14 +4,10 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 
 type Locale = 'en' | 'am';
 
-const I18nContext = createContext<{
-  locale: Locale;
-  t: (key: string) => string;
-  setLocale: (locale: Locale) => void;
-}>({
-  locale: 'en',
-  t: (key) => key,
-  setLocale: () => {},
+const I18nContext = createContext({
+  locale: 'en' as Locale,
+  t: (key: string) => key,
+  setLocale: (locale: Locale) => {},
 });
 
 export function I18nProvider({ children }: { children: ReactNode }) {
@@ -24,20 +20,36 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/i18n/${locale}`)
-      .then((r) => r.json())
-      .then(setTranslations)
-      .catch(() => {});
+    const loadTranslations = async () => {
+      try {
+        const base = process.env.NEXT_PUBLIC_API_URL;
+
+        const res = await fetch(`${base}/i18n/${locale}`);
+        if (!res.ok) {
+          throw new Error('Failed to load translations');
+        }
+
+        const data = await res.json();
+        setTranslations(data);
+      } catch (err) {
+        console.error('i18n load failed:', err);
+        setTranslations({});
+      }
+    };
+
+    loadTranslations();
     localStorage.setItem('locale', locale);
   }, [locale]);
 
   const t = (key: string): string => {
     const keys = key.split('.');
     let value: any = translations;
+
     for (const k of keys) {
       value = value?.[k];
       if (value === undefined) return key;
     }
+
     return typeof value === 'string' ? value : key;
   };
 

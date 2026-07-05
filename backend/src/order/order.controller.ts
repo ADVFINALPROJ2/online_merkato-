@@ -4,7 +4,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'; 
 import { GetUser } from '../auth/get-user.decorator';
 @Controller('order')
-@UseGuards(JwtAuthGuard) // 👈 Apply to the whole controller
+@UseGuards(JwtAuthGuard) 
 export class OrderController {
   constructor(private orderService: OrderService) {}
 
@@ -18,7 +18,7 @@ export class OrderController {
     return this.orderService.cancelOrder(user.id, id);
   }
 
-  @Get('history')
+  @Get('/order/history')
   async getOrderHistory(@GetUser() user: any) {
     return this.orderService.getOrderHistory(user.id);
   }

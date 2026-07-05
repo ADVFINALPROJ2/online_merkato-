@@ -65,7 +65,7 @@ export default function ProfilePage() {
               {user.firstName?.[0]?.toUpperCase() ?? <UserIcon className="size-8" />}
             </div>
             <div className="flex-1">
-              <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">Buyer</span>
+              <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">   {user.role}   </span>
               <h1 className="mt-2 font-display text-3xl font-bold">{user.firstName} {user.lastName}</h1>
               <p className="mt-1 text-sm text-white/85">Member since {memberSince} - {address}</p>
             </div>
@@ -149,7 +149,7 @@ export default function ProfilePage() {
           </div>
           {orders.length === 0 ? (
             <div className="mt-6 rounded-xl border border-dashed border-[var(--border)] p-8 text-center text-[var(--muted-foreground)]">
-              No orders yet. <Link href="/browse" className="text-[var(--primary)] hover:underline">Browse products</Link>
+              No orders yet. <Link href="/buyer" className="text-[var(--primary)] hover:underline">Browse products</Link>
             </div>
           ) : (
             <div className="mt-4 divide-y divide-[var(--border)]">

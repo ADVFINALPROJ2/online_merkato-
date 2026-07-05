@@ -1,4 +1,4 @@
-import { OrderStatus } from '@prisma/client'; // Import the enum
+import { OrderStatus } from '@prisma/client'; 
 import { Controller, Post, Body, Headers, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChapaProvider } from '../payment/chapa.provider';
@@ -15,7 +15,7 @@ export class OrderWebhookController {
   @Post()
   async handleChapaWebhook(
     @Body() body: any,
-    @Headers('chapa-signature') signature: string, // Chapa sends a signature to verify the request
+    @Headers('chapa-signature') signature: string, 
   ) {
     // 1. Verify the transaction with Chapa
     const txRef = body.tx_ref;

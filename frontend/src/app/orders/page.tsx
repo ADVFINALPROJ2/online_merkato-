@@ -7,7 +7,6 @@ import {
   Truck,
   PackageCheck,
   XCircle,
-  MapPin,
 } from "lucide-react";
 import { orderService } from "@/services/order-service";
 
@@ -19,7 +18,7 @@ type ProgressStatus =
   | "CANCELLED";
 
 interface OrderItem {
-  product: {
+  product?: {
     name: string;
     description?: string;
   };
@@ -50,6 +49,7 @@ export default function MyOrdersPage() {
     const fetchOrders = async () => {
       try {
         const data = await orderService.getMyOrders();
+        console.log("Orders:", data);
         setOrders(data);
       } catch (err) {
         console.error("Failed to load orders:", err);
@@ -68,25 +68,29 @@ export default function MyOrdersPage() {
       "SHIPPED",
       "DELIVERED",
     ];
+
     return steps.indexOf(status);
   };
 
   if (loading) {
     return (
-      <div className="p-10 text-center text-slate-500">Loading orders...</div>
+      <div className="p-10 text-center text-slate-500">
+        Loading orders...
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
       <div className="mx-auto max-w-7xl px-4">
-        <h1 className="text-4xl font-bold mb-2">My Orders</h1>
-        <p className="text-slate-500 mb-8">
-          Track your real orders from database
+        <h1 className="mb-2 text-4xl font-bold">My Orders</h1>
+
+        <p className="mb-8 text-slate-500">
+          Track your orders and delivery progress
         </p>
 
         {orders.length === 0 ? (
-          <div className="p-16 text-center bg-white border rounded-xl">
+          <div className="rounded-xl border bg-white p-16 text-center">
             No orders found
           </div>
         ) : (
@@ -97,32 +101,37 @@ export default function MyOrdersPage() {
               return (
                 <div
                   key={order.id}
-                  className="bg-white p-6 rounded-xl border"
+                  className="rounded-xl border bg-white p-6"
                 >
                   {/* Header */}
-                  <div className="flex justify-between border-b pb-3 mb-4">
+                  <div className="mb-4 flex justify-between border-b pb-3">
                     <div>
-                      <p className="font-mono text-blue-600 text-sm">
+                      <p className="font-mono text-sm text-blue-600">
                         {order.id}
                       </p>
+
                       <p className="text-xs text-slate-500">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </p>
                     </div>
 
-                    <span className="text-xs px-3 py-1 rounded-full bg-slate-100">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs">
                       {order.status}
                     </span>
                   </div>
 
                   {/* Items */}
-                  <div className="space-y-2 mb-4">
-                    {order.items.map((item, i) => (
-                      <div key={i} className="flex justify-between">
+                  <div className="mb-4 space-y-2">
+                    {order.items?.map((item, i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between"
+                      >
                         <div>
                           <p className="font-semibold">
-                            {item.product.name}
+                            {item.product?.name ?? "Product"}
                           </p>
+
                           <p className="text-xs text-slate-500">
                             Qty {item.quantity}
                           </p>
@@ -136,28 +145,28 @@ export default function MyOrdersPage() {
                   </div>
 
                   {/* Total */}
-                  <div className="border-t pt-3 flex justify-between font-bold">
+                  <div className="flex justify-between border-t pt-3 font-bold">
                     <span>Total</span>
                     <span>Br {order.totalAmount}</span>
                   </div>
 
                   {/* Address */}
-                  <p className="text-xs text-slate-500 mt-2">
+                  <p className="mt-2 text-xs text-slate-500">
                     📍 {order.deliveryAddress}
                   </p>
 
                   {/* Courier */}
                   {order.delivery?.runner && (
-                    <p className="text-xs mt-1 text-slate-500">
+                    <p className="mt-1 text-xs text-slate-500">
                       🚚 Courier:{" "}
                       {order.delivery.runner.firstName}{" "}
                       {order.delivery.runner.lastName}
                     </p>
                   )}
 
-                  {/* Status progress */}
+                  {/* Progress */}
                   {order.status !== "CANCELLED" && (
-                    <div className="flex justify-between mt-6">
+                    <div className="mt-6 flex justify-between">
                       {["Pending", "Confirmed", "Shipped", "Delivered"].map(
                         (label, i) => {
                           const Icon = [
@@ -175,15 +184,18 @@ export default function MyOrdersPage() {
                               className="flex flex-col items-center"
                             >
                               <div
-                                className={`w-8 h-8 flex items-center justify-center rounded-full border ${
+                                className={`flex h-8 w-8 items-center justify-center rounded-full border ${
                                   active
                                     ? "bg-blue-600 text-white"
                                     : "bg-white text-slate-400"
                                 }`}
                               >
-                                <Icon className="w-4 h-4" />
+                                <Icon className="h-4 w-4" />
                               </div>
-                              <span className="text-xs mt-1">{label}</span>
+
+                              <span className="mt-1 text-xs">
+                                {label}
+                              </span>
                             </div>
                           );
                         }
@@ -191,10 +203,10 @@ export default function MyOrdersPage() {
                     </div>
                   )}
 
-                  {/* Cancel state */}
+                  {/* Cancelled */}
                   {order.status === "CANCELLED" && (
-                    <div className="mt-4 text-red-600 flex items-center gap-2">
-                      <XCircle className="w-4 h-4" />
+                    <div className="mt-4 flex items-center gap-2 text-red-600">
+                      <XCircle className="h-4 w-4" />
                       Cancelled Order
                     </div>
                   )}

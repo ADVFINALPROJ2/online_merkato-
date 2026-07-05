@@ -32,6 +32,7 @@ export class AuthController {
   @ApiBody({ type: RegisterDriverDto })
   @ApiResponse({ status: 201, description: 'Driver registered successfully' })
   async registerDriver(@Body() dto: RegisterDriverDto) {
+
     return this.authService.registerDriver(dto);
   }
 

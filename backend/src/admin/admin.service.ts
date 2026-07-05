@@ -151,23 +151,59 @@ export class AdminService {
     });
   }
 
+  async getDriverDeliveries(userId: string) {
+  console.log("LOOKING FOR DRIVER:", userId);
+
+  return this.prisma.delivery.findMany({
+    where: { runnerId: userId },
+    include: {
+      order: {
+        include: {
+          buyer: true,
+          items: { include: { product: true } },
+        },
+      },
+    },
+  });
+}
+
   async assignDriverToOrder(orderId: string, driverUserId: string) {
-    const [order, driver] = await Promise.all([
-      this.prisma.order.findUnique({ where: { id: orderId } }),
-      this.prisma.driverProfile.findUnique({ where: { userId: driverUserId } }),
-    ]);
 
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-    if (!driver || driver.status !== 'APPROVED') {
-      throw new NotFoundException('Approved driver not found');
-    }
+  console.log('ORDER ID:', orderId);
+  console.log('DRIVER USER ID:', driverUserId);
 
-    return this.prisma.delivery.upsert({
-      where: { orderId: orderId },
-      update: { runnerId: driverUserId, status: 'ASSIGNED' },
-      create: { orderId: orderId, runnerId: driverUserId, status: 'ASSIGNED' },
-    });
+  const [order, driver] = await Promise.all([
+    this.prisma.order.findUnique({
+      where: { id: orderId },
+    }),
+    this.prisma.driverProfile.findUnique({
+      where: { userId: driverUserId },
+    }),
+  ]);
+
+  if (!order) {
+    throw new NotFoundException('Order not found');
   }
+
+  if (!driver || driver.status !== 'APPROVED') {
+    throw new NotFoundException('Approved driver not found');
+  }
+
+  const delivery = await this.prisma.delivery.upsert({
+    where: { orderId },
+    update: {
+      runnerId: driverUserId,
+      status: 'ASSIGNED',
+    },
+    create: {
+      orderId,
+      runnerId: driverUserId,
+      status: 'ASSIGNED',
+    },
+  });
+
+  console.log('DELIVERY CREATED:', delivery);
+
+  return delivery;
+}
 }

@@ -7,7 +7,7 @@ import { NotificationModule } from '../notification/notification.module';
 @Module({
   imports: [
     PrismaModule,
-    NotificationModule, // <--- Import the MODULE here
+    NotificationModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

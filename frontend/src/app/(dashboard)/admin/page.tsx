@@ -1,132 +1,92 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
-import api from '@/services/api';
-import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-interface Order {
-  id: string;
-  total: number;
-  status: string;
-  buyer: { firstName: string; lastName: string };
-  items: { product: { name: string } }[];
-}
-
-interface Stats {
-  totalRevenue: number;
-  orderCount: number;
-  sellerCount: number;
-  courierCount: number;
-}
-
-export default function AdminPage() {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+export default function AdminHome() {
   const router = useRouter();
-  const [stats, setStats] = useState<Stats>({ totalRevenue: 0, orderCount: 0, sellerCount: 0, courierCount: 0 });
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<any>(null);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isLoading, isAuthenticated, router]);
+    fetch('http://localhost:5001/api/admin/summary')
+      .then((res) => res.json())
+      .then(setSummary)
+      .catch(console.error);
+  }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsRes, ordersRes] = await Promise.all([
-          api.get<Stats>('/admin/stats'),
-          api.get<Order[]>('/admin/orders'),
-        ]);
-        setStats(statsRes.data);
-        setOrders(ordersRes.data);
-      } catch (err: any) {
-        setError(err.response?.status === 401 ? "Unauthorized: Please log in again." : "Failed to load dashboard.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (isAuthenticated) fetchData();
-  }, [isAuthenticated]);
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
-  if (isLoading) return <div className="flex min-h-screen items-center justify-center"><p>Loading your dashboard...</p></div>;
-
-  if (!isAuthenticated || user?.role !== 'ADMIN') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-xl font-bold">Access Denied</h1>
-        <Button onClick={() => router.push('/login')} className="mt-4">Return to Login</Button>
-      </div>
-    );
-  }
-
-  if (loading) return <div className="p-8">Loading dashboard...</div>;
-  if (error) return <div className="p-8 text-red-600 font-bold">{error}</div>;
+  const Card = ({
+    title,
+    value,
+    color,
+  }: {
+    title: string;
+    value: number;
+    color: string;
+  }) => (
+    <div
+      style={{
+        padding: '20px',
+        borderRadius: '12px',
+        background: 'white',
+        border: '1px solid #e5e7eb',
+      }}
+    >
+      <p style={{ fontSize: '12px', color: '#666' }}>{title}</p>
+      <h2 style={{ color, fontSize: '24px' }}>{value}</h2>
+    </div>
+  );
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold">Platform overview</h1>
-          <p className="text-gray-600">Welcome back, {user.email}</p>
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p style={{ color: '#666' }}>Platform overview</p>
+
+      {summary && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '15px',
+            marginTop: '20px',
+          }}
+        >
+          <Card
+            title="Pending Drivers"
+            value={summary.drivers.pending}
+            color="#f59e0b"
+          />
+          <Card
+            title="Approved Drivers"
+            value={summary.drivers.approved}
+            color="#22c55e"
+          />
+          <Card
+            title="Pending Sellers"
+            value={summary.sellers.pending}
+            color="#3b82f6"
+          />
+          <Card
+            title="Unassigned Orders"
+            value={summary.fulfillment.unassignedOrders}
+            color="#ef4444"
+          />
         </div>
-        <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50">
-          <LogOut className="w-4 h-4" /> Logout
-        </Button>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <StatCard title="TOTAL REVENUE" value={`Br ${stats.totalRevenue.toLocaleString()}`} />
-        <StatCard title="ORDERS" value={stats.orderCount.toString()} />
-        <StatCard title="SELLERS" value={stats.sellerCount.toString()} />
-        <StatCard title="COURIERS" value={stats.courierCount.toString()} />
-      </div>
+      {/* QUICK NAV */}
+      <div style={{ marginTop: '30px', display: 'flex', gap: '10px' }}>
+        <button onClick={() => router.push('/admin/dashboard')}>
+          Review Drivers
+        </button>
 
-      <div className="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-gray-100 text-gray-600 uppercase text-xs font-semibold">
-              <th className="p-4 border-b">Order</th>
-              <th className="p-4 border-b">Buyer</th>
-              <th className="p-4 border-b">Items</th>
-              <th className="p-4 border-b">Total</th>
-              <th className="p-4 border-b">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} className="border-b hover:bg-gray-50 transition-colors">
-                <td className="p-4 font-mono text-sm text-gray-700">{order.id.slice(0, 8)}</td>
-                <td className="p-4 text-gray-800">{`${order.buyer.firstName} ${order.buyer.lastName}`}</td>
-                <td className="p-4 text-gray-600">{order.items.map(i => i.product.name).join(', ')}</td>
-                <td className="p-4 font-medium text-gray-800">Br {order.total}</td>
-                <td className="p-4">
-                  <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-200">
-                    {order.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <button onClick={() => router.push('/admin/orders/unassigned')}>
+          Assign Orders
+        </button>
+
+        <button onClick={() => router.push('/admin/sellers/pending')}>
+          Review Sellers
+        </button>
       </div>
     </div>
   );
 }
-
-const StatCard = ({ title, value }: { title: string; value: string }) => (
-  <div className="p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
-    <p className="text-[10px] text-gray-500 font-bold tracking-wider mb-2">{title}</p>
-    <p className="text-2xl font-bold text-gray-900">{value}</p>
-  </div>
-);

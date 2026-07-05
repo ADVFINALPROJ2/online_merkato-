@@ -108,19 +108,19 @@ export class AuthService {
           email: dto.email,
           phoneNumber: dto.phoneNumber,
           password: hashedPassword,
-          role: 'DRIVER',
+          role: 'DELIVERY',
         },
       });
 
       await tx.driverProfile.create({
         data: {
           userId: createdUser.id,
-          vehicleType: dto.vehicleType,
-          licensePlate: dto.licensePlate,
-          idImageUrl: dto.idImageUrl,
-          licenseImageUrl: dto.licenseImageUrl,
-        },
-      });
+          vehicleType: dto.vehicleType ?? 'MOTORCYCLE',
+          licensePlate: dto.licensePlate ?? null,
+          idImageUrl: dto.idImageUrl ?? 'https://placehold.co/600x400.png',
+          licenseImageUrl: dto.licenseImageUrl ?? null,
+  },
+});
 
       return createdUser;
     });
@@ -129,14 +129,31 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+  const user = await this.prisma.user.findUnique({
+    where: { email: dto.email },
+  });
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-    if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
+  console.log('LOGIN EMAIL:', dto.email);
+  console.log('USER FOUND:', !!user);
 
-    return this.buildUserResponse(user);
+  if (!user) {
+    throw new UnauthorizedException('Invalid credentials');
   }
+
+  const isPasswordValid = await bcrypt.compare(
+    dto.password,
+    user.password,
+  );
+
+  console.log('PASSWORD VALID:', isPasswordValid);
+  console.log('USER ROLE:', user.role);
+
+  if (!isPasswordValid) {
+    throw new UnauthorizedException('Invalid credentials');
+  }
+
+  return this.buildUserResponse(user);
+}
 
   async refresh(dto: RefreshTokenDto) {
     const tokens = await this.prisma.refreshToken.findMany({

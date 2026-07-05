@@ -10,6 +10,7 @@ export interface RegisterDto {
   phoneNumber: string;
   password: string;
   role?: 'BUYER' | 'SELLER' | 'ADMIN' | 'DELIVERY';
+  createdAt?: string;
 }
 
 export interface ForgotPasswordDto {
@@ -32,6 +33,7 @@ export interface User {
   email: string | null;
   phoneNumber: string;
   role: string;
+  createdAt?: string;
 }
 
 export interface AuthResponse {

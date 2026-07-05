@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch } from '@nestjs/common';
 import { DriverService } from './driver.service';
 import { RegisterDriverDto } from './dto/register-driver.dto';
 
@@ -16,4 +16,22 @@ export class DriverController {
     const { email, password } = body;
     return this.driverService.login(email, password);
   }
+
+  @Get('deliveries/:userId')
+  async getDriverDeliveries(
+    @Param('userId') userId: string,
+  ) {
+    return this.driverService.getDriverDeliveries(userId);
+  }
+
+  @Patch('deliveries/:deliveryId/complete')
+  async markAsDelivered(@Param('deliveryId') deliveryId: string) {
+    return this.driverService.markAsDelivered(deliveryId);
+  }
+
+  @Get('profile/:userId')
+async getDriverProfile(@Param('userId') userId: string) {
+  return this.driverService.getDriverProfile(userId);
+}
+
 }

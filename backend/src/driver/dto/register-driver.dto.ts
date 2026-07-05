@@ -8,3 +8,4 @@ export class RegisterDriverDto {
   idImageUrl: string;
   licenseImageUrl?: string;
 }
+

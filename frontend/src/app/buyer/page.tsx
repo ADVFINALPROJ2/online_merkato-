@@ -189,7 +189,7 @@ export default function BuyerDashboardPage() {
                 <div className="mt-6 rounded-xl border border-dashed border-[var(--border)] p-8 text-center text-[var(--muted-foreground)]">
                   <ShoppingBag className="mx-auto size-8 mb-2" />
                   No orders yet.{' '}
-                  <Link href="/" className="text-amber-600 hover:underline">
+                  <Link href="/buyer" className="text-amber-600 hover:underline">
                     Browse products
                   </Link>
                 </div>
@@ -227,7 +227,7 @@ export default function BuyerDashboardPage() {
 
           <div className="mt-6 flex justify-center">
             <Link
-              href="/"
+              href="/buyer"
               className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-8 py-3 font-semibold text-white hover:bg-amber-700 transition-colors"
             >
               <ShoppingBag className="size-5" />
@@ -239,3 +239,4 @@ export default function BuyerDashboardPage() {
     </>
   );
 }
+// browse

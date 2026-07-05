@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { NotificationsGateway } from '../notification/notifications.gateway'; // Ensure your file path matches this exactly!
+import { NotificationsGateway } from '../notification/notifications.gateway'; 
+
+
 
 @Injectable()
 export class OrderService {
@@ -135,12 +137,25 @@ export class OrderService {
 
   // #31 Order History
   async getOrderHistory(buyerId: string) {
-    return this.prisma.order.findMany({
-      where: { buyerId },
-      include: { items: true },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
+  return this.prisma.order.findMany({
+    where: { buyerId },
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+      },
+      delivery: {
+        include: {
+          runner: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
 
   // #32 Confirm Delivery
   async confirmDelivery(buyerId: string, orderId: string) {

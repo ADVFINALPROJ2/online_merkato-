@@ -1,4 +1,3 @@
-// src/hooks/use-auth.ts
 'use client';
 
 import { useContext } from 'react';

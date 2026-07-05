@@ -48,9 +48,7 @@ export default function RegisterPage() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      role: 'BUYER',
-    },
+  
   });
 
   // Sync selected role with form
@@ -60,7 +58,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterForm) => {
     try {
-      const nameParts = data.fullName.trim().split(/\s+/);
+      const nameParts = data.fullName.trim().split(/\s+/);     
 
       const user = await registerUser({
         firstName: nameParts[0],
@@ -97,50 +95,50 @@ export default function RegisterPage() {
 
           {/* ROLE SELECTION */}
           <div className="grid grid-cols-3 gap-2">
-            {ROLES.map((role) => {
-              const Icon = role.icon;
-              return (
-                <button
-                  key={role.value}
-                  type="button"
-                  onClick={() =>
-                    setSelectedRole(role.value as 'BUYER' | 'SELLER' | 'DELIVERY')
-                  }
-                  className={`border p-2 rounded flex flex-col items-center transition ${
-                    selectedRole === role.value
-                      ? 'bg-black text-white'
-                      : 'bg-white'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="text-xs mt-1">{role.label}</span>
-                </button>
-              );
-            })}
-          </div>
+  {ROLES.map((role) => {
+    const Icon = role.icon;
+
+    return (
+      <button
+        key={role.value}
+        type="button"
+        onClick={() => {
+          setSelectedRole(role.value);
+
+          if (role.value === 'DELIVERY') {
+            router.push('/driver-register');
+          }
+        }}
+        className={`border rounded-xl p-3 flex flex-col items-center justify-center transition-all
+          ${
+            selectedRole === role.value
+              ? 'bg-black text-white border-black'
+              : 'bg-white text-black border-gray-300 hover:border-black'
+          }`}
+      >
+        <Icon size={20} />
+        <span className="text-xs mt-1">{role.label}</span>
+      </button>
+    );
+  })}
+</div>
 
           {/* FORM FIELDS */}
           <Input {...register('fullName')} placeholder="Full Name" />
-          <p className="text-xs text-red-500">
-            {errors.fullName?.message}
-          </p>
+          <p className="text-xs text-red-500">{errors.fullName?.message}</p>
 
           <Input {...register('email')} placeholder="Email" />
           <p className="text-xs text-red-500">{errors.email?.message}</p>
 
           <Input {...register('phoneNumber')} placeholder="Phone Number" />
-          <p className="text-xs text-red-500">
-            {errors.phoneNumber?.message}
-          </p>
+          <p className="text-xs text-red-500">{errors.phoneNumber?.message}</p>
 
           <Input
             type="password"
             {...register('password')}
             placeholder="Password"
           />
-          <p className="text-xs text-red-500">
-            {errors.password?.message}
-          </p>
+          <p className="text-xs text-red-500">{errors.password?.message}</p>
 
           {/* SUBMIT */}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
