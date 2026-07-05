@@ -19,9 +19,12 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL || '*',
-    credentials: true,
-  });
+  origin: [
+    'https://online-merkato-pi.vercel.app',
+    'http://localhost:3000',
+  ],
+  credentials: true,
+});
 
   const config = new DocumentBuilder()
     .setTitle('Digital Merkato API')
