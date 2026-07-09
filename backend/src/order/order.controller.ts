@@ -18,7 +18,7 @@ export class OrderController {
     return this.orderService.cancelOrder(user.id, id);
   }
 
-  @Get('/order/history')
+  @Get('history')
   async getOrderHistory(@GetUser() user: any) {
     return this.orderService.getOrderHistory(user.id);
   }
